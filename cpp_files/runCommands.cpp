@@ -29,7 +29,8 @@ char executeCurrentCommand(const progCommands cmd, size_t* index_commands, doubl
     StackElem_t secondNum = 0;
     StackElem_t poppedNum = 0;
 
-    
+    int clearBuffer = 0;
+
     switch (cmd)
     {
     case COMMAND_PUSH:
@@ -78,7 +79,10 @@ char executeCurrentCommand(const progCommands cmd, size_t* index_commands, doubl
         break;
 
     case COMMAND_IN:
-        return 1;
+        printf("Enter a number: ");
+        while (scanf("%lg", &firstNum) != 1) { while((clearBuffer = getchar() != '\n')); printf("Try again: "); };
+        stackPush(stack, firstNum);
+        *index_commands += 1;
         break;
 
     case COMMAND_HLT:

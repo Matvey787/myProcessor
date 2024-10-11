@@ -5,6 +5,7 @@
 #include <assert.h>
 
 #include "../h_files/getFileStrings.h"
+#include "../h_files/putDataToFile.h"
 #include "../h_files/convertAsmToCommands.h"
 #include "../h_files/runCommands.h"
 
@@ -19,28 +20,36 @@
 #include "../workWithStack/h_files/macros.h"
 
 int main(){
+    //files
+    char assembler_FileName[30] = "PROGRAM.ASM";
+    char programCode_FileName[30] = "program_code.txt";
 
     // read commmands from assembler
     char* buffer = {};
-    char assemblerFileName[30] = "PROGRAM.ASM";
-    size_t numberOfStrings = getFileStrings(&buffer, assemblerFileName);
-
-    // convert buffer to commands
-    double* commands = (double*)calloc(sizeof(double), 20);
-    convertAsmToCommands(&commands, buffer, numberOfStrings, assemblerFileName);
-
-
-    //for (size_t i = 0; i < numberOfCommands; i++) printf("%lg \n", commands[i]);
+    size_t numberOfStrings = getFileStrings(&buffer, assembler_FileName);
     
-    // start work with stack
-    stack_t stack;
-    MACRO_stackInit(&stack);
+    // convert buffer to commands
+    double* commands = (double*)calloc(sizeof(double), 50);
 
-    runCommands(&stack, commands);
+    size_t lengthOfCommands = 0;
+
+    if ((lengthOfCommands = convertAsmToCommands(&commands, buffer, numberOfStrings, assembler_FileName)) != 0){
+        
+        putDataToFile(commands, lengthOfCommands, programCode_FileName);
+
+        //for (size_t i = 0; i < lengthOfCommands; i++) printf("%lg \n", commands[i]);
+        
+        // start work with stack
+        stack_t stack;
+        MACRO_stackInit(&stack);
+
+        runCommands(&stack, commands);
+        stackDestroy(&stack);
+
+    }
 
     free(commands);
     free(buffer);
-    stackDestroy(&stack);
 
     return 0;
 }

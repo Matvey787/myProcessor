@@ -3,19 +3,21 @@
 #include <ctype.h>
 #include <string.h>
 #include <assert.h>
+#include <math.h>
 
 #include "../h_files/convertAsmToCommands.h"
 #include "../h_files/commands.h"
 
 enum errors {
     NO_ERROR = 0,
-    INCORRECT_COMMAND = 2
+    INCORRECT_COMMAND = 2,
+    INCORRECT_DOT = 4
 };
 
 static errors writeCommand(const char* command, double** commands, size_t indexOfCommand);
 static void printTypeOfError(errors error, const char* asmFileName, const size_t line);
 
-void convertAsmToCommands(double** commands, const char* buffer, const size_t numberOfStrings, const char* asmFileName){
+size_t convertAsmToCommands(double** commands, const char* buffer, const size_t numberOfStrings, const char* asmFileName){
 
     size_t indexOfCommand_in_Commands = 0;
 
@@ -25,7 +27,9 @@ void convertAsmToCommands(double** commands, const char* buffer, const size_t nu
     int readed_symbols = 0;
 
     double number = 0;
+    int degreeAfterDot = 1;
     char f_startNumber = 0;
+    char f_startDotInNumber = 0;
 
     char command[20] = {};
     int command_i = 0;
@@ -44,6 +48,7 @@ void convertAsmToCommands(double** commands, const char* buffer, const size_t nu
                 command[command_i] = '\0';
                 if ((error = writeCommand(command, commands, indexOfCommand_in_Commands)) != NO_ERROR){
                     printTypeOfError(error, asmFileName, line+1);
+                    return 0;
                     break;
                 }
 
@@ -51,6 +56,8 @@ void convertAsmToCommands(double** commands, const char* buffer, const size_t nu
             }
                 
             line += 1;
+            degreeAfterDot = 1;
+            f_startDotInNumber = 0;
             f_startNumber = 0;
             number = 0;
             command_i = 0;
@@ -61,6 +68,7 @@ void convertAsmToCommands(double** commands, const char* buffer, const size_t nu
             command[command_i] = '\0';
             if ((error = writeCommand(command, commands, indexOfCommand_in_Commands)) != NO_ERROR){
                     printTypeOfError(error, asmFileName, line+1);
+                    return 0;
                     break;
                 }
             ++indexOfCommand_in_Commands;
@@ -71,7 +79,10 @@ void convertAsmToCommands(double** commands, const char* buffer, const size_t nu
 
         else if (isdigit(symbol))
         {
-            number = ((symbol-'0') + 10*number);
+            if (f_startDotInNumber)
+                number = ((symbol-'0')/pow(10, degreeAfterDot++) + number);
+            else
+                number = ((symbol-'0') + 10*number);
         }
 
         else if (isalpha(symbol))
@@ -79,12 +90,24 @@ void convertAsmToCommands(double** commands, const char* buffer, const size_t nu
             if (f_startNumber) {printf("incorrect command: "); break;}
             command[command_i++] = symbol;
         }
+        else if (symbol == '.'){
+            if ( isdigit(buffer[readed_symbols - 2]) && isdigit(buffer[readed_symbols]) ){
+                f_startDotInNumber = 1;
+            } else {
+                error = INCORRECT_DOT;
+                printTypeOfError(error, asmFileName, line+1);
+                return 0;
+                break;
+            }
+        }
     }
+    return indexOfCommand_in_Commands;
 }
 
 static errors writeCommand(const char* command, double** commands, size_t indexOfCommand){
 
     double* commands_address = *commands;
+
     if (strcmp(command, "PUSH") == 0)
         commands_address[indexOfCommand] = COMMAND_PUSH;
 
@@ -105,7 +128,10 @@ static errors writeCommand(const char* command, double** commands, size_t indexO
     
     else if (strcmp(command, "OUT") == 0)
         commands_address[indexOfCommand] = COMMAND_OUT;
-    
+        
+    else if (strcmp(command, "IN") == 0)
+        commands_address[indexOfCommand] = COMMAND_IN;
+        
     else if (strcmp(command, "HLT") == 0)
         commands_address[indexOfCommand] = COMMAND_HLT;
     else
@@ -123,6 +149,9 @@ static void printTypeOfError(errors error, const char* asmFileName, const size_t
     {
     case INCORRECT_COMMAND:
         fprintf(stderr, "INCORRECT_COMMAND");
+        break;
+    case INCORRECT_DOT:
+        fprintf(stderr, "INCORRECT_DOT");
         break;
 
     case NO_ERROR:
