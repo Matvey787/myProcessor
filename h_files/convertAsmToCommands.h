@@ -7,6 +7,6 @@
 #include <string.h>
 #include <assert.h>
 
-size_t convertAsmToCommands(double** commands, const char* buffer, const size_t numberOfStrings, const char* asmFileName);
+void convertAsmToCommands(double** commands, const char* buffer, const size_t numberOfStrings, const char* asmFileName);
 
 #endif

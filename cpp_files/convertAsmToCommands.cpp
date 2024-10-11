@@ -15,7 +15,7 @@ enum errors {
 static errors writeCommand(const char* command, double** commands, size_t indexOfCommand);
 static void printTypeOfError(errors error, const char* asmFileName, const size_t line);
 
-size_t convertAsmToCommands(double** commands, const char* buffer, const size_t numberOfStrings, const char* asmFileName){
+void convertAsmToCommands(double** commands, const char* buffer, const size_t numberOfStrings, const char* asmFileName){
 
     size_t indexOfCommand_in_Commands = 0;
 
@@ -80,7 +80,6 @@ size_t convertAsmToCommands(double** commands, const char* buffer, const size_t 
             command[command_i++] = symbol;
         }
     }
-    return indexOfCommand_in_Commands + 1;
 }
 
 static errors writeCommand(const char* command, double** commands, size_t indexOfCommand){
