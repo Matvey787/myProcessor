@@ -14,12 +14,12 @@ char executeCurrentCommand(const progCommands cmd, size_t* index_commands, doubl
 
 void runCommands(stack_t* stack, double* commands){
     size_t index_commands = 0;
-    char end = 0;
-    progCommands cmd;
+
     while (1){
-        cmd = (progCommands)commands[index_commands];
-        end = executeCurrentCommand(cmd, &index_commands, commands, stack);
-        if (end) break;
+        progCommands cmd = (progCommands)commands[index_commands];
+
+        if (executeCurrentCommand(cmd, &index_commands, commands, stack))
+            break;
     }
 
 }
@@ -80,7 +80,7 @@ char executeCurrentCommand(const progCommands cmd, size_t* index_commands, doubl
 
     case COMMAND_IN:
         printf("Enter a number: ");
-        while (scanf("%lg", &firstNum) != 1) { while((clearBuffer = getchar() != '\n')); printf("Try again: "); };
+        while (scanf("%lg", &firstNum) != 1) { while((clearBuffer = getchar() != '\n')); printf("Try again: "); }; // FIXME  func + error handling
         stackPush(stack, firstNum);
         *index_commands += 1;
         break;

@@ -19,37 +19,49 @@
 #include "../workWithStack/h_files/stackDump.h"
 #include "../workWithStack/h_files/macros.h"
 
+void myCallocOfCommands(command_t** commands, size_t numberOfStrings);
+
 int main(){
     //files
-    char assembler_FileName[30] = "PROGRAM.ASM";
-    char programCode_FileName[30] = "program_code.txt";
+    char assembler_FileName[] = "PROGRAM.ASM";
+    char programCode_FileName[] = "program_code.txt";
 
     // read commmands from assembler
-    char* buffer = {};
+    char* buffer = nullptr;
     size_t numberOfStrings = getFileStrings(&buffer, assembler_FileName);
     
     // convert buffer to commands
-    double* commands = (double*)calloc(sizeof(double), 50);
+    command_t* commands;
+    myCallocOfCommands(&commands, numberOfStrings); // creation and initialization of commands 
 
-    size_t lengthOfCommands = 0;
-
-    if ((lengthOfCommands = convertAsmToCommands(&commands, buffer, numberOfStrings, assembler_FileName)) != 0){
+    if (convertAsmToCommands(commands, buffer, numberOfStrings, assembler_FileName)){
         
-        putDataToFile(commands, lengthOfCommands, programCode_FileName);
-
-        //for (size_t i = 0; i < lengthOfCommands; i++) printf("%lg \n", commands[i]);
+        putDataToFile(commands, numberOfStrings, programCode_FileName);
         
         // start work with stack
-        stack_t stack;
+        stack_t stack = {};
         MACRO_stackInit(&stack);
 
-        runCommands(&stack, commands);
+        //runCommands(&stack, commands);
         stackDestroy(&stack);
 
+    } else {
+        printf("CONVERTATION FAILED\n");
     }
 
     free(commands);
     free(buffer);
 
     return 0;
+}
+
+void myCallocOfCommands(command_t** commands, size_t numberOfStrings){
+
+    *commands = (command_t*)calloc(sizeof(command_t), numberOfStrings);
+
+    for (size_t i = 0; i < numberOfStrings; i++){
+        (*commands)[i].com = NOT_COMMAND;
+        (*commands)[i].reg = NOT_REGISTER;
+        (*commands)[i].num = -1;
+    }
 }

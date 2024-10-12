@@ -7,137 +7,174 @@
 
 #include "../h_files/convertAsmToCommands.h"
 #include "../h_files/commands.h"
+#include "../h_files/registers.h"
 
 enum errors {
     NO_ERROR = 0,
     INCORRECT_COMMAND = 2,
-    INCORRECT_DOT = 4
+    NO_CORRECT_NUMBER_OR_REGISTER_AFTER_COMMAND = 4,
+    NO_CORRECT_REGISTER_AFTER_COMMAND = 8
 };
 
-static errors writeCommand(const char* command, double** commands, size_t indexOfCommand);
+static errors writeCommand(const char* command, command_t* commands, size_t indexOfCommand);
 static void printTypeOfError(errors error, const char* asmFileName, const size_t line);
+static void addZeroTerminator_splitLineIntoWords(char* buffer, const size_t numberOfStrings);
+static progRegisters writeRegisterAddress(const char* command, command_t* commands,  size_t indexOfCommand);
 
-size_t convertAsmToCommands(double** commands, const char* buffer, const size_t numberOfStrings, const char* asmFileName){
+convertationStatuses convertAsmToCommands(command_t* commands, char* buffer, const size_t numberOfStrings, const char* asmFileName){
+    assert(commands != nullptr && "commmands is null pointer");
+    assert(buffer != nullptr && "buffer is null pointer");
+    assert(asmFileName != nullptr && "assembler file name is null pointer");
 
-    size_t indexOfCommand_in_Commands = 0;
+    addZeroTerminator_splitLineIntoWords(buffer, numberOfStrings);
+    /* for (int i = 0; i < 10; i++){
+        printf("%s\n", buffer + i);
+    } */
 
     errors error = NO_ERROR;
-
-    char symbol = 0;
-    int readed_symbols = 0;
-
+    char command[20];
     double number = 0;
-    int degreeAfterDot = 1;
-    char f_startNumber = 0;
-    char f_startDotInNumber = 0;
-
-    char command[20] = {};
-    int command_i = 0;
+    size_t buff_i = 0;
 
     for (size_t line = 0; line < numberOfStrings;){
+        sscanf(buffer + buff_i, "%s", command);
 
-        symbol = buffer[readed_symbols++];
+        if (writeCommand(command, commands, line) == INCORRECT_COMMAND)
+            error = INCORRECT_COMMAND;
+
+        buff_i += strlen(command)+1;
         
-        if (symbol == '\n'){
-            if (f_startNumber){
+        //---------------------------------------------------command push----------------------------------------------------------
 
-                (*commands)[indexOfCommand_in_Commands] = number;
-                ++indexOfCommand_in_Commands;
+        if (strcmp(command, "PUSH") == 0){
 
-            } else {
-                command[command_i] = '\0';
-                if ((error = writeCommand(command, commands, indexOfCommand_in_Commands)) != NO_ERROR){
-                    printTypeOfError(error, asmFileName, line+1);
-                    return 0;
-                    break;
-                }
+            sscanf(buffer + buff_i, "%s", command);
 
-                ++indexOfCommand_in_Commands;
-            }
+            if (sscanf(command, "%lg", &number) == 1)
+                commands[line].num = number;
+
+            else if (writeRegisterAddress(command, commands, line) != NOT_REGISTER){
+
+                // change code of push because of register was fpunded after push
+                commands[line].com = COMMAND_PUSH_REGISTER;
                 
-            line += 1;
-            degreeAfterDot = 1;
-            f_startDotInNumber = 0;
-            f_startNumber = 0;
-            number = 0;
-            command_i = 0;
-        }
-
-        else if (isspace(symbol))
-        {
-            command[command_i] = '\0';
-            if ((error = writeCommand(command, commands, indexOfCommand_in_Commands)) != NO_ERROR){
-                    printTypeOfError(error, asmFileName, line+1);
-                    return 0;
-                    break;
-                }
-            ++indexOfCommand_in_Commands;
+            } else 
+                error = NO_CORRECT_NUMBER_OR_REGISTER_AFTER_COMMAND;
             
-            command_i = 0;
-            f_startNumber = 1;
+            buff_i += strlen(command)+1;
+        }
+        
+        //---------------------------------------------------command pop----------------------------------------------------------
+
+        if (strcmp(command, "POP") == 0){
+            
+            sscanf(buffer + buff_i, "%s", command);
+
+            if (writeRegisterAddress(command, commands, line) == NOT_REGISTER)
+                error = NO_CORRECT_REGISTER_AFTER_COMMAND;
+
+            buff_i += strlen(command)+1;
         }
 
-        else if (isdigit(symbol))
-        {
-            if (f_startDotInNumber)
-                number = ((symbol-'0')/pow(10, degreeAfterDot++) + number);
-            else
-                number = ((symbol-'0') + 10*number);
+        if (error != NO_ERROR){
+            printTypeOfError(error, asmFileName, line+1);
+            return CONVERTATION_FAIL; 
         }
 
-        else if (isalpha(symbol))
-        {
-            if (f_startNumber) {printf("incorrect command: "); break;}
-            command[command_i++] = symbol;
+        //---------------------------------------------------command jump----------------------------------------------------------
+        if (strcmp(command, "JMP") == 0 || strcmp(command, "JA") == 0 || strcmp(command, "JAE") == 0 || strcmp(command, "JE") == 0){
+            
+            sscanf(buffer + buff_i, "%s", command);
+            sscanf(command, "%lg", &number);
+            commands[line].num = number;
+
+            buff_i += strlen(command)+1;
         }
-        else if (symbol == '.'){
-            if ( isdigit(buffer[readed_symbols - 2]) && isdigit(buffer[readed_symbols]) ){
-                f_startDotInNumber = 1;
-            } else {
-                error = INCORRECT_DOT;
-                printTypeOfError(error, asmFileName, line+1);
-                return 0;
-                break;
-            }
+
+        if (error != NO_ERROR){
+            printTypeOfError(error, asmFileName, line+1);
+            return CONVERTATION_FAIL; 
         }
+
+        line++;
     }
-    return indexOfCommand_in_Commands;
+  
+    return CONVERTATION_SUCCESS;
 }
 
-static errors writeCommand(const char* command, double** commands, size_t indexOfCommand){
+static errors writeCommand(const char* command, command_t* commands, size_t indexOfCommand){
 
-    double* commands_address = *commands;
+    progCommands* command_address = &(commands[indexOfCommand].com);
 
     if (strcmp(command, "PUSH") == 0)
-        commands_address[indexOfCommand] = COMMAND_PUSH;
-
+        *command_address = COMMAND_PUSH;
+    
     else if (strcmp(command, "POP") == 0)
-        commands_address[indexOfCommand] = COMMAND_POP;
+        *command_address = COMMAND_POP;
 
     else if (strcmp(command, "ADD") == 0)
-        commands_address[indexOfCommand] = COMMAND_ADD;
+        *command_address = COMMAND_ADD;
 
     else if (strcmp(command, "SUB") == 0)
-        commands_address[indexOfCommand] = COMMAND_SUB;
+        *command_address = COMMAND_SUB;
 
     else if (strcmp(command, "MUL") == 0)
-        commands_address[indexOfCommand] = COMMAND_MUL;
+        *command_address = COMMAND_MUL;
 
     else if (strcmp(command, "DIV") == 0)
-        commands_address[indexOfCommand] = COMMAND_DIV;
+        *command_address = COMMAND_DIV;
     
     else if (strcmp(command, "OUT") == 0)
-        commands_address[indexOfCommand] = COMMAND_OUT;
+        *command_address = COMMAND_OUT;
         
     else if (strcmp(command, "IN") == 0)
-        commands_address[indexOfCommand] = COMMAND_IN;
-        
+        *command_address = COMMAND_IN;
+
+    else if (strcmp(command, "JA") == 0)
+        *command_address = COMMAND_JA;
+
+    else if (strcmp(command, "JAE") == 0)
+        *command_address = COMMAND_JAE;
+
+    else if (strcmp(command, "JE") == 0)
+        *command_address = COMMAND_JE;
+
+    else if (strcmp(command, "JMP") == 0)
+        *command_address = COMMAND_JMP;
+
     else if (strcmp(command, "HLT") == 0)
-        commands_address[indexOfCommand] = COMMAND_HLT;
+        *command_address = COMMAND_HLT;
     else
         return INCORRECT_COMMAND;
 
     return NO_ERROR;
+}
+
+static progRegisters writeRegisterAddress(const char* command, command_t* commands, size_t indexOfCommand){
+
+    progRegisters* register_address = &(commands[indexOfCommand].reg);
+
+    if (strcmp(command, "AX") == 0){
+        *register_address = AX;
+        return AX;
+    }
+    else if (strcmp(command, "BX") == 0){
+        *register_address = BX;
+        return BX;
+    }
+
+    else if (strcmp(command, "CX") == 0){
+        *register_address = CX;
+        return CX;
+    }
+
+    else if (strcmp(command, "DX") == 0){
+        *register_address = DX;
+        return DX;
+    }
+    else
+        return NOT_REGISTER;
+
 }
 
 static void printTypeOfError(errors error, const char* asmFileName, const size_t line){
@@ -150,8 +187,12 @@ static void printTypeOfError(errors error, const char* asmFileName, const size_t
     case INCORRECT_COMMAND:
         fprintf(stderr, "INCORRECT_COMMAND");
         break;
-    case INCORRECT_DOT:
-        fprintf(stderr, "INCORRECT_DOT");
+    case NO_CORRECT_NUMBER_OR_REGISTER_AFTER_COMMAND:
+        fprintf(stderr, "NO_CORRECT_NUMBER_OR_REGISTER_AFTER_COMMAND");
+        break;
+
+    case NO_CORRECT_REGISTER_AFTER_COMMAND:
+        fprintf(stderr, "NO_CORRECT_REGISTER_AFTER_COMMAND");
         break;
 
     case NO_ERROR:
@@ -162,4 +203,27 @@ static void printTypeOfError(errors error, const char* asmFileName, const size_t
     }
 
     fprintf(stderr, "]\n");
+}
+
+static void addZeroTerminator_splitLineIntoWords(char* buffer, const size_t numberOfStrings){
+
+    size_t buffer_i = 0;
+    //printf("%d\n", numberOfStrings);
+
+    for (size_t j = 0; j < numberOfStrings;){
+        //printf("%c", buffer[buffer_i]);
+
+        if (buffer[buffer_i] == '\n'){
+            buffer[buffer_i] = '\0';
+            j++;
+        }
+        else if (isspace(buffer[buffer_i])){
+            //printf("space ");
+            buffer[buffer_i] = '\0';
+        }
+
+        
+        ++buffer_i;
+    }
+
 }

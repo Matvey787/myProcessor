@@ -6,7 +6,8 @@
 #include <ctype.h>
 #include <string.h>
 #include <assert.h>
+#include "commands.h"
 
-void putDataToFile(double* array, size_t length, const char* file_name);
+void putDataToFile(command_t* commands, size_t length, const char* file_name);
 
 #endif

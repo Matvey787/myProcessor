@@ -6,7 +6,13 @@
 #include <ctype.h>
 #include <string.h>
 #include <assert.h>
+#include "commands.h"
 
-size_t convertAsmToCommands(double** commands, const char* buffer, const size_t numberOfStrings, const char* asmFileName);
+enum convertationStatuses{
+    CONVERTATION_SUCCESS = 1,
+    CONVERTATION_FAIL = 0
+};
+
+convertationStatuses convertAsmToCommands(command_t* commands, char* buffer, const size_t numberOfStrings, const char* asmFileName);
 
 #endif
