@@ -7,24 +7,23 @@
 #include "../h_files/getFileStrings.h"
 #include "../h_files/putDataToFile.h"
 #include "../h_files/convertAsmToCommands.h"
-#include "../h_files/runCommands.h"
 
 #include "../h_files/commands.h"
 
-#include "../workWithStack/h_files/stressTests.h"
+/* #include "../workWithStack/h_files/stressTests.h"
 #include "../workWithStack/h_files/stackConstructor.h"
 #include "../workWithStack/h_files/stackPushPop.h"
 #include "../workWithStack/h_files/errorNames.h"
 #include "../workWithStack/h_files/stackInitDestroy.h"
 #include "../workWithStack/h_files/stackDump.h"
-#include "../workWithStack/h_files/macros.h"
+#include "../workWithStack/h_files/macros.h" */
 
 void myCallocOfCommands(command_t** commands, size_t numberOfStrings);
 
 int main(){
     //files
-    char assembler_FileName[] = "PROGRAM.ASM";
-    char programCode_FileName[] = "program_code.txt";
+    char assembler_FileName[] = "../PROGRAM.ASM";
+    char programCode_FileName[] = "../program_code.txt";
 
     // read commmands from assembler
     char* buffer = nullptr;
@@ -37,15 +36,9 @@ int main(){
     if (convertAsmToCommands(commands, buffer, numberOfStrings, assembler_FileName)){
         
         putDataToFile(commands, numberOfStrings, programCode_FileName);
-        
-        // start work with stack
-        stack_t stack = {};
-        MACRO_stackInit(&stack);
-
-        //runCommands(&stack, commands);
-        stackDestroy(&stack);
 
     } else {
+
         printf("CONVERTATION FAILED\n");
     }
 
