@@ -8,6 +8,8 @@
 #include <assert.h>
 #include "commands.h"
 
+const short FIRST_LINES_INFO_OF_FILE = 3;
+
 enum convertationStatuses{
     CONVERTATION_SUCCESS = 1,
     CONVERTATION_FAIL = 0

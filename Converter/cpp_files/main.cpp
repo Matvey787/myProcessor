@@ -21,6 +21,7 @@
 void myCallocOfCommands(command_t** commands, size_t numberOfStrings);
 
 int main(){
+    
     //files
     char assembler_FileName[] = "../PROGRAM.ASM";
     char programCode_FileName[] = "../program_code.txt";

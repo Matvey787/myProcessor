@@ -7,8 +7,8 @@
 #include <string.h>
 #include <assert.h>
 
-#include "../workWithStack/h_files/stackConstructor.h"
+#include "../h_files/spu.h"
 
-void runCommands(stack_t* stack, double* commands);
+void runCode(spu_t* spu);
 
 #endif
