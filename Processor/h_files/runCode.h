@@ -7,8 +7,9 @@
 #include <string.h>
 #include <assert.h>
 
-#include "../h_files/spu.h"
+#include "spu.h"
+#include "macros.h"
 
-void runCode(spu_t* spu);
+void runCode(spu_t* spu MYSBS(, size_t numberOfCommands));
 
 #endif

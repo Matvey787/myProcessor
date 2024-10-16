@@ -3,6 +3,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <assert.h>
+#include <math.h>
 
 #include "../h_files/getFileStrings.h"
 #include "../h_files/putDataToFile.h"
@@ -56,6 +57,6 @@ void myCallocOfCommands(command_t** commands, size_t numberOfStrings){
     for (size_t i = 0; i < numberOfStrings; i++){
         (*commands)[i].com = NOT_COMMAND;
         (*commands)[i].reg = NOT_REGISTER;
-        (*commands)[i].num = -1;
+        (*commands)[i].num = NAN;
     }
 }

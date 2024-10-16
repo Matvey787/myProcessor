@@ -3,6 +3,7 @@
 #include "../h_files/getCommands.h"
 #include "../h_files/spu.h"
 #include "../h_files/runCode.h"
+#include "../h_files/macros.h"
 
 #include "../../workWithStack/h_files/stackConstructor.h"
 #include "../../workWithStack/h_files/stackInitDestroy.h"
@@ -26,10 +27,9 @@ int main(){
 
     getCommands(&spu.code, buffer, numberOfStrings);
 
-    for(size_t i = 0; i< numberOfStrings - FIRST_LINES_INFO_OF_FILE; i++)
-        printf("%s \n", spu.code[i]);
+    //for(size_t i = 0; i< numberOfStrings - FIRST_LINES_INFO_OF_FILE; i++) printf("%s \n", spu.code[i]);
     
-    runCode(&spu);
+    runCode(&spu MYSBS(, numberOfStrings - FIRST_LINES_INFO_OF_FILE));
 
 
     destroySpu(&spu);

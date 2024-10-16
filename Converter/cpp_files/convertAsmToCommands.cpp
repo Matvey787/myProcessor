@@ -50,12 +50,14 @@ convertationStatuses convertAsmToCommands(command_t* commands, char* buffer, con
 
             sscanf(buffer + buff_i, "%s", command);
 
-            if (sscanf(command, "%lg", &number) == 1)
+            if (sscanf(command, "%lg", &number) == 1){
+                //printf("%lg\n", number);
                 commands[line].num = number;
+            }
 
             else if (writeRegisterAddress(command, commands, line) != NOT_REGISTER){
 
-                // change code of push because of register was fpunded after push
+                // change code of push because of register was founded after push
                 commands[line].com = COMMAND_PUSH_REGISTER;
                 
             } else 
