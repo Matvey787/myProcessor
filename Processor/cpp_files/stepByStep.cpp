@@ -23,18 +23,18 @@ int stepByStep(spu_t* spu, int commandWithArg){
     // get size of cmd screen
     int yCmdLineSize = 0;
     int xCmdLineSize = 0;
-    getmaxyx(stdscr, yCmdLineSize, xCmdLineSize);
+    getmaxyx(stdscr, yCmdLineSize, xCmdLineSize); // TODO fix warning (getmaxy)
 
     static int yCoord_pointer = 2;
 
-    int d = (int)(spu->ip*10 + spu->ip) ;
+    int d = (int)(spu->ip*10 + spu->ip) ; // FIXME
 
     int max_column = xCmdLineSize / 11;
 
     int row = spu->ip / max_column;
     int col = spu->ip % max_column;
 
-    row = row * 3 + 2;
+    row = row * 3 + 2; // FIXME make consts
     col = col * 11;
 
     move(row, col);
@@ -105,7 +105,7 @@ void writeCode(spu_t* spu, size_t numberOfCommands){
             writedInfo = 1;
         }
 
-        printw(" %s", spu->code[i]);
+        printw(" %s   ", spu->code[i]);
         for (size_t j = 0; j < (9 - strlen(spu->code[i])); j++)
             printw(" ");
         printw("|");

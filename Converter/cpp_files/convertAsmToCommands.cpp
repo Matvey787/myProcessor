@@ -21,7 +21,8 @@ static void printTypeOfError(errors error, const char* asmFileName, const size_t
 static void addZeroTerminator_splitLineIntoWords(char* buffer, const size_t numberOfStrings);
 static progRegisters writeRegisterAddress(const char* command, command_t* commands,  size_t indexOfCommand);
 
-convertationStatuses convertAsmToCommands(command_t* commands, char* buffer, const size_t numberOfStrings, const char* asmFileName){
+convertationStatuses convertAsmToCommands(command_t* commands, char* buffer, const size_t numberOfStrings, 
+                                          const char* asmFileName){
     assert(commands != nullptr && "commmands is null pointer");
     assert(buffer != nullptr && "buffer is null pointer");
     assert(asmFileName != nullptr && "assembler file name is null pointer");
@@ -32,20 +33,21 @@ convertationStatuses convertAsmToCommands(command_t* commands, char* buffer, con
     } */
 
     errors error = NO_ERROR;
-    char command[20];
+    char command[20]; /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     double number = 0;
     size_t buff_i = 0;
 
     for (size_t line = 0; line < numberOfStrings;){
-        sscanf(buffer + buff_i, "%s", command);
+        sscanf(buffer + buff_i, "%s", command); // TODO remove copy
 
-        if (writeCommand(command, commands, line) == INCORRECT_COMMAND)
+        if (writeCommand(command, commands, line) == INCORRECT_COMMAND) // TODO rename writeCommand -> writeOpcode
             error = INCORRECT_COMMAND;
 
         buff_i += strlen(command)+1;
         
         //---------------------------------------------------command push----------------------------------------------------------
 
+        // TODO function write operands
         if (strcmp(command, "PUSH") == 0){
 
             sscanf(buffer + buff_i, "%s", command);
@@ -53,15 +55,15 @@ convertationStatuses convertAsmToCommands(command_t* commands, char* buffer, con
             if (sscanf(command, "%lg", &number) == 1){
                 //printf("%lg\n", number);
                 commands[line].num = number;
-            }
-
-            else if (writeRegisterAddress(command, commands, line) != NOT_REGISTER){
+            } else if (writeRegisterAddress(command, commands, line) != NOT_REGISTER){
 
                 // change code of push because of register was founded after push
                 commands[line].com = COMMAND_PUSH_REGISTER;
+                // TODO make enum operand type
                 
-            } else 
+            } else{ 
                 error = NO_CORRECT_NUMBER_OR_REGISTER_AFTER_COMMAND;
+            }
             
             buff_i += strlen(command)+1;
         }
@@ -84,9 +86,10 @@ convertationStatuses convertAsmToCommands(command_t* commands, char* buffer, con
         }
 
         //---------------------------------------------------command jump----------------------------------------------------------
+        // TODO remove strcmp and add enum comparison
         if (strcmp(command, "JMP") == 0 || strcmp(command, "JA") == 0 || strcmp(command, "JAE") == 0 || strcmp(command, "JE") == 0){
             
-            sscanf(buffer + buff_i, "%s", command);
+            sscanf(buffer + buff_i, "%s", command); // remove copy
             sscanf(command, "%lg", &number);
             commands[line].num = number;
 
@@ -164,12 +167,10 @@ static progRegisters writeRegisterAddress(const char* command, command_t* comman
         *register_address = BX;
         return BX;
     }
-
     else if (strcmp(command, "CX") == 0){
         *register_address = CX;
         return CX;
     }
-
     else if (strcmp(command, "DX") == 0){
         *register_address = DX;
         return DX;
@@ -212,12 +213,13 @@ static void addZeroTerminator_splitLineIntoWords(char* buffer, const size_t numb
     size_t buffer_i = 0;
     //printf("%d\n", numberOfStrings);
 
-    for (size_t j = 0; j < numberOfStrings;){
+    for (size_t strings_cnt = 0; strings_cnt < numberOfStrings;){
         //printf("%c", buffer[buffer_i]);
+        assert(buffer[buffer_i] != '\0');
 
         if (buffer[buffer_i] == '\n'){
             buffer[buffer_i] = '\0';
-            j++;
+            strings_cnt++;
         }
         else if (isspace(buffer[buffer_i])){
             //printf("space ");

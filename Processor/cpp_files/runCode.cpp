@@ -114,7 +114,7 @@ short executeCurrentCommand(const progCommands cmd, spu_t* spu){
         firstNum = stackPop(&(spu->stack));
         secondNum = stackPop(&(spu->stack));
 
-        stackPush(&(spu->stack), secondNum/firstNum);
+        stackPush(&(spu->stack), secondNum/firstNum); // TODO check a / 0
 
         ++spu->ip;
         break;
@@ -142,7 +142,7 @@ short executeCurrentCommand(const progCommands cmd, spu_t* spu){
         break;
 
     // ----------------------------------------------------------------------------  JA  ------------------------------------------------------------------
-    case COMMAND_JA:
+    case COMMAND_JA: // TODO remove copypaste
         firstNum = stackPop(&(spu->stack));
         secondNum = stackPop(&(spu->stack));
         if (secondNum > firstNum){

@@ -10,6 +10,8 @@ size_t getFileStrings(char** buffer, const char* file_name){
 
     // open file for read
 
+    // FIXME CHECK ERRORS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+
     FILE* rFile = fopen(file_name, "rb");
 
     // find size of file
@@ -25,7 +27,7 @@ size_t getFileStrings(char** buffer, const char* file_name){
 
     // find number of strings
     size_t numberOfStrings = 0;
-    for (size_t i = 0; i < size; i++) if ((*buffer)[i] == '\n') ++numberOfStrings;
+    for (size_t i = 0; i < size; i++) if ((*buffer)[i] == '\n') ++numberOfStrings; // TODO count last line without \n
 
     // close file 
 

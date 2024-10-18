@@ -32,7 +32,7 @@ int main(){
     size_t numberOfStrings = getFileStrings(&buffer, assembler_FileName);
     
     // convert buffer to commands
-    command_t* commands;
+    command_t* commands = nullptr;
     myCallocOfCommands(&commands, numberOfStrings); // creation and initialization of commands 
 
     if (convertAsmToCommands(commands, buffer, numberOfStrings, assembler_FileName)){

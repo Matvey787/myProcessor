@@ -12,7 +12,7 @@ size_t getCommands(char*** code, char* buffer, const size_t numberOfStrings){
     size_t passedLines = 0;
     size_t buff_i = 0;
 
-    char command[200] = {};
+    char command[200] = {}; // FIXME remove copy
 
     while(1){
 
