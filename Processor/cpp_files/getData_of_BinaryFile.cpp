@@ -4,9 +4,9 @@
 #include <string.h>
 #include <assert.h>
 
-#include "../h_files/getFileStrings.h"
+#include "../h_files/getData_of_BinaryFile.h"
 
-size_t getFileStrings(char** buffer, const char* file_name){
+size_t getData_of_BinaryFile(char** buffer, const char* file_name){
 
     // open file for read
 
@@ -23,13 +23,9 @@ size_t getFileStrings(char** buffer, const char* file_name){
     *buffer = (char*)calloc(size, sizeof(char));
     fread(*buffer, sizeof(char), size, rFile);
 
-    // find number of strings
-    size_t numberOfStrings = 0;
-    for (size_t i = 0; i < size; i++) if ((*buffer)[i] == '\n') ++numberOfStrings;
-
     // close file 
 
     fclose(rFile);
 
-    return numberOfStrings;
+    return size;
 }

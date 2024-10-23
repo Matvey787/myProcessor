@@ -7,6 +7,7 @@
 #include "../h_files/commands.h"
 #include "../h_files/stepByStep.h"
 #include "../h_files/macros.h"
+#include "../h_files/getNumber.h"
 
 #include "../../workWithStack/h_files/stressTests.h"
 #include "../../workWithStack/h_files/stackConstructor.h"
@@ -17,6 +18,8 @@
 #include "../../workWithStack/h_files/macros.h"
 
 short executeCurrentCommand(const progCommands cmd, spu_t* spu);
+double getArg(spu_t* spu);
+double* getAddress(spu_t* spu);
 
 #define STOP_RUN 0
 #define CONTINUE_RUN 1
@@ -30,9 +33,11 @@ void runCode(spu_t* spu MYSBS(, size_t numberOfCommands)){
     MYSBS(endwin();)
 
     while (1){
-        progCommands cmd = (progCommands)atoi(spu->code[spu->ip]);
-
-        MYSBS(stepByStep(spu, 0);)
+        progCommands cmd = spu->code[spu->ip].int_num >= 0 ? (progCommands)spu->code[spu->ip].int_num : 
+                                                            (progCommands)spu->code[spu->ip].dbl_num;
+        
+        MYSBS(stepByStep(spu);)
+        spu->ip++;
 
         if (!executeCurrentCommand(cmd, spu)){
             break;
@@ -45,7 +50,6 @@ short executeCurrentCommand(const progCommands cmd, spu_t* spu){
     StackElem_t secondNum = 0;
     StackElem_t poppedNum = 0;
 
-    int clearBuffer = 0;
 
     //stackDump(&spu->stack);
 
@@ -53,32 +57,17 @@ short executeCurrentCommand(const progCommands cmd, spu_t* spu){
     {
     // ----------------------------------------------------------------------------  PUSH  ------------------------------------------------------------------
     case COMMAND_PUSH:
-        stackPush(&(spu->stack), atof(spu->code[++spu->ip]));
-
-        MYSBS(stepByStep(spu, 1);)
-
-        ++spu->ip;
-        break;
-    // ----------------------------------------------------------------------------  PUSHR  ------------------------------------------------------------------
-    case COMMAND_PUSH_REGISTER:
-        firstNum = spu->regData[atoi(spu->code[++spu->ip])];
-
-        stackPush(&(spu->stack), firstNum);
-
-        MYSBS(stepByStep(spu, 1);)
-
-        ++spu->ip;
+        stackPush(&(spu->stack), getArg(spu));
 
         break;
 
     // ----------------------------------------------------------------------------  POP  ------------------------------------------------------------------
     case COMMAND_POP:
+
         poppedNum = stackPop(&(spu->stack));
-        spu->regData[atoi(spu->code[++spu->ip])] = poppedNum;
 
-        MYSBS(stepByStep(spu, 1);)
+        *(getAddress(spu)) = poppedNum;
 
-        ++spu->ip;
         break;
 
     // ----------------------------------------------------------------------------  ADD  ------------------------------------------------------------------
@@ -88,7 +77,6 @@ short executeCurrentCommand(const progCommands cmd, spu_t* spu){
 
         stackPush(&(spu->stack), firstNum + secondNum);
 
-        ++spu->ip;
         break;
     // ----------------------------------------------------------------------------  SUB  ------------------------------------------------------------------
     case COMMAND_SUB:
@@ -97,7 +85,6 @@ short executeCurrentCommand(const progCommands cmd, spu_t* spu){
 
         stackPush(&(spu->stack), secondNum - firstNum);
 
-        ++spu->ip;
         break;
     // ----------------------------------------------------------------------------  MUL  ------------------------------------------------------------------
     case COMMAND_MUL:
@@ -106,39 +93,37 @@ short executeCurrentCommand(const progCommands cmd, spu_t* spu){
 
         stackPush(&(spu->stack), secondNum*firstNum);
 
-        ++spu->ip;
         break;
 
     // ----------------------------------------------------------------------------  DIV  ------------------------------------------------------------------
     case COMMAND_DIV:
         firstNum = stackPop(&(spu->stack));
         secondNum = stackPop(&(spu->stack));
-
-        stackPush(&(spu->stack), secondNum/firstNum); // TODO check a / 0
-
-        ++spu->ip;
+        if (firstNum != 0)
+            stackPush(&(spu->stack), secondNum/firstNum);
+        else{
+            printf("division by zero");
+            return STOP_RUN;
+        }
         break;
 
     // ----------------------------------------------------------------------------  OUT  ------------------------------------------------------------------
     case COMMAND_OUT:
-
         #ifndef STEPBYSTEP
         poppedNum = stackPop(&(spu->stack));
         printf("Out: %lg\n", poppedNum);
         #endif
         
-        ++spu->ip;
         break;
 
     // ----------------------------------------------------------------------------  IN  ------------------------------------------------------------------
     case COMMAND_IN:
         printf("Enter a number: ");
 
-        while (scanf("%lg", &firstNum) != 1) { while((clearBuffer = getchar() != '\n')); printf("Try again: "); }; // FIXME  func + error handling
+        getCoeff("Enter a number: ", &firstNum);
 
         stackPush(&(spu->stack), firstNum);
 
-        ++spu->ip;
         break;
 
     // ----------------------------------------------------------------------------  JA  ------------------------------------------------------------------
@@ -146,10 +131,10 @@ short executeCurrentCommand(const progCommands cmd, spu_t* spu){
         firstNum = stackPop(&(spu->stack));
         secondNum = stackPop(&(spu->stack));
         if (secondNum > firstNum){
-            //MYSBS(stepByStep(spu, 1);)
-            spu->ip = (size_t)atoi(spu->code[++spu->ip]);
+
+            spu->ip = (size_t)((spu->code)[++spu->ip].dbl_num);
         } else 
-            spu->ip += 2;
+            spu->ip += 1;
 
         stackPush(&(spu->stack), secondNum);
         stackPush(&(spu->stack), firstNum);
@@ -160,9 +145,9 @@ short executeCurrentCommand(const progCommands cmd, spu_t* spu){
         firstNum = stackPop(&(spu->stack));
         secondNum = stackPop(&(spu->stack));
         if (fabs(secondNum - firstNum) <= compareZero)
-            spu->ip = (size_t)atoi(spu->code[++spu->ip]);
+            spu->ip = (size_t)(spu->code)[++spu->ip].dbl_num;
         else 
-            spu->ip += 2;
+            spu->ip += 1;
 
         stackPush(&(spu->stack), secondNum);
         stackPush(&(spu->stack), firstNum);
@@ -174,9 +159,9 @@ short executeCurrentCommand(const progCommands cmd, spu_t* spu){
         firstNum = stackPop(&(spu->stack));
         secondNum = stackPop(&(spu->stack));
         if (secondNum >= firstNum)
-            spu->ip = (size_t)atoi(spu->code[++spu->ip]);
+            spu->ip = (size_t)(spu->code)[++spu->ip].dbl_num;
         else 
-            spu->ip += 2;
+            spu->ip += 1;
             
         stackPush(&(spu->stack), secondNum);
         stackPush(&(spu->stack), firstNum);
@@ -184,7 +169,7 @@ short executeCurrentCommand(const progCommands cmd, spu_t* spu){
 
     // ----------------------------------------------------------------------------  JMP  ------------------------------------------------------------------
     case COMMAND_JMP:
-        spu->ip = (size_t)atoi(spu->code[++spu->ip]);
+        spu->ip = (size_t)(spu->code)[++spu->ip].dbl_num;
 
         ++spu->ip;
         break;
@@ -210,4 +195,44 @@ short executeCurrentCommand(const progCommands cmd, spu_t* spu){
         break;
     }
     return CONTINUE_RUN;
+}
+
+double getArg(spu_t* spu){
+
+    int modType = spu->code[spu->ip++].int_num;
+    double result = 0;
+
+    if (modType & 1) result = spu->code[(spu->ip)++].dbl_num;
+
+    if (modType & 2) {result += (spu->regData)[spu->code[(spu->ip)++].int_num];}
+
+    if (modType & 4) {
+        int addr = (int)result;
+        result = (spu->RAM)[addr];
+    }
+    return result;
+}
+
+
+
+double* getAddress(spu_t* spu){
+
+    int modType = spu->code[spu->ip++].int_num;
+
+    int ptr_arr = 0;
+
+    if ((modType & 1) && (modType & 4)){
+        ptr_arr = (int)( spu->code[(spu->ip)++].dbl_num );
+        return &((spu->RAM)[ptr_arr]);
+
+    } else if ((modType & 2) && (modType & 4)){
+        ptr_arr = (int)( spu->code[(spu->ip)++].int_num );
+        return &((spu->RAM)[ptr_arr]);
+
+    } else if ((modType & 2)){
+        ptr_arr = (int)( spu->code[(spu->ip)++].int_num );
+        return &(spu->regData[ptr_arr]);
+    } 
+
+    return nullptr;
 }

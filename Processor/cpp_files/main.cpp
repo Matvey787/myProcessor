@@ -1,5 +1,6 @@
 #include <stdio.h>
-#include "../h_files/getFileStrings.h"
+
+#include "../h_files/getData_of_BinaryFile.h"
 #include "../h_files/getCommands.h"
 #include "../h_files/spu.h"
 #include "../h_files/runCode.h"
@@ -15,37 +16,41 @@ void destroySpu(spu_t* spu);
 int main(){
 
     //files
-    char programCode_FileName[] = "../program_code.txt";
+    char programCode_FileName[] = "../program_BinaryCode.txt";
 
     // read commmands from assembler
     char* buffer = nullptr;
-    size_t numberOfStrings = getFileStrings(&buffer, programCode_FileName);
-    
+    getData_of_BinaryFile(&buffer, programCode_FileName);
+    //printf("%s %d\n", buffer, numberOfElements);
+    /* for (int i = 0; i < numberOfElements; i++)
+        printf("%c\n", buffer[i]); */
     // create soft processing unit
     spu_t spu = {};
     initSpu(&spu);
 
-    getCommands(&spu.code, buffer, numberOfStrings);
+    getCommands(&spu, buffer);
 
-    //for(size_t i = 0; i< numberOfStrings - FIRST_LINES_INFO_OF_FILE; i++) printf("%s \n", spu.code[i]);
+    //for(size_t i = 0; i< spu.codeLength; i++) printf("%lg %d\n", (spu.code[i].dbl_num), (spu.code[i].int_num));
     
-    runCode(&spu MYSBS(, numberOfStrings - FIRST_LINES_INFO_OF_FILE));
+    runCode(&spu MYSBS(, spu.codeLength));
 
-
+    
     destroySpu(&spu);
     free(buffer);
-    return 0;
+    return 0; 
 }
 
 void initSpu(spu_t* spu){
     spu->ip = 0;
     MACRO_stackInit(&spu->stack);
     spu->code = nullptr;
+    spu->RAM = (StackElem_t*)calloc(100, sizeof(StackElem_t));
 }
 
 void destroySpu(spu_t* spu){
 
     free(spu->code);
+    free(spu->RAM);
     stackDestroy(&spu->stack);
     spu->ip = 0;
 

@@ -3,7 +3,7 @@
 
 #include "spu.h"
 
-int stepByStep(spu_t* spu, int commandWithArg);
+int stepByStep(spu_t* spu);
 void writeCode(spu_t* spu, size_t numberOfCommands);
 
 #endif

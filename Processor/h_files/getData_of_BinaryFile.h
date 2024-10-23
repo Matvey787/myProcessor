@@ -7,6 +7,6 @@
 #include <string.h>
 #include <assert.h>
 
-size_t getFileStrings(char** buffer, const char* file_name);
+size_t getData_of_BinaryFile(char** buffer, const char* file_name);
 
 #endif

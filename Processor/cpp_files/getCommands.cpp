@@ -1,60 +1,96 @@
-#include "../h_files/getFileStrings.h"
+#include "../h_files/getData_of_BinaryFile.h"
 #include "../h_files/getCommands.h"
+#include "../h_files/spu.h"
+#include "../h_files/commands.h"
+#include "math.h"
 
-static void addZeroTerminator_splitLineIntoWords(char* buffer, const size_t numberOfStrings);
+getComStatuses getCommands(spu_t* spu, char* buffer){
 
-size_t getCommands(char*** code, char* buffer, const size_t numberOfStrings){
+    spu->code = (number_t*)calloc(sizeof(number_t), 50);
+    for (int i = 0; i < 50; i++){
+        spu->code[i].dbl_num = NAN;
+        spu->code[i].int_num = -1;
+    }
 
-    *code = (char**)calloc(sizeof(char**), numberOfStrings - FIRST_LINES_INFO_OF_FILE);
-    
-    addZeroTerminator_splitLineIntoWords(buffer, numberOfStrings);
-
-    size_t passedLines = 0;
     size_t buff_i = 0;
-
-    char command[200] = {}; // FIXME remove copy
-
+    size_t codeLength = 0;
+    int indexOfCurrentCommand = 0;
     while(1){
-
-        sscanf(buffer + buff_i, "%s", command);
-
-        if (passedLines < FIRST_LINES_INFO_OF_FILE){
-            
-            buff_i += strlen(command) + 1;
-            passedLines += 1;
-            continue;
-
-        } else {
-            (*code)[passedLines - FIRST_LINES_INFO_OF_FILE] = buffer + buff_i;
-        }
-
-        passedLines += 1;
-
-        if (passedLines == numberOfStrings)
+        //fprintf(stderr, "%d %d\n", codeLength, buff_i);
+        memcpy(&((spu->code)[codeLength++].int_num), buffer + buff_i, sizeof(int));
+        
+        buff_i += sizeof(int);
+        
+        indexOfCurrentCommand = (spu->code)[codeLength - 1].int_num;
+        
+        if ( indexOfCurrentCommand == COMMAND_HLT)
             break;
 
-        buff_i += strlen(command) + 1;
+        //fprintf(stderr, "Command: %d %d\n", indexOfCurrentCommand, buff_i);
+        if (indexOfCurrentCommand == COMMAND_POP){
+            memcpy(&(spu->code)[codeLength++].int_num, buffer + buff_i, sizeof(int));
+            buff_i += sizeof(int);
+
+            if ((spu->code)[codeLength - 1].int_num == (REGISTER_MOD + RAM_MOD)){
+                
+                memcpy(&(spu->code)[codeLength++].int_num, buffer + buff_i, sizeof(int));
+                buff_i += sizeof(int);
+
+            } else if ((spu->code)[codeLength - 1].int_num == (NUMBER_MOD + RAM_MOD)){
+
+                memcpy(&(spu->code)[codeLength++].dbl_num, buffer + buff_i, sizeof(double));
+                buff_i += sizeof(double);
+
+            } else if ((spu->code)[codeLength - 1].int_num == (REGISTER_MOD)) {
+                memcpy(&(spu->code)[codeLength++].int_num, buffer + buff_i, sizeof(int));
+                buff_i += sizeof(int);
+            } else {
+                return SOMETHING_GO_WRONG_WITH_GETTING_COMMANDS;
+            }
+
+        } else if ( ((COMMAND_JA <= indexOfCurrentCommand) && (indexOfCurrentCommand <= COMMAND_JMP))){
+            
+            memcpy(&(spu->code)[codeLength++].dbl_num, buffer + buff_i, sizeof(double));
+            buff_i += sizeof(double);
+
+        } else if (indexOfCurrentCommand == COMMAND_PUSH){
+            
+            memcpy(&(spu->code)[codeLength++].int_num, buffer + buff_i, sizeof(int));
+            buff_i += sizeof(int);
+            
+            if ((spu->code)[codeLength - 1].int_num == (REGISTER_MOD + NUMBER_MOD + RAM_MOD)){
+
+                memcpy(&(spu->code)[codeLength++].dbl_num, buffer + buff_i, sizeof(double));
+                buff_i += sizeof(double);
+
+                memcpy(&(spu->code)[codeLength++].int_num, buffer + buff_i, sizeof(int));
+                buff_i += sizeof(int);
+
+            }else if ((spu->code)[codeLength - 1].int_num == (REGISTER_MOD + RAM_MOD)){
+                
+                memcpy(&(spu->code)[codeLength++].int_num, buffer + buff_i, sizeof(int));
+                buff_i += sizeof(int);
+
+            } else if ((spu->code)[codeLength - 1].int_num == (NUMBER_MOD + RAM_MOD)){
+
+                memcpy(&(spu->code)[codeLength++].dbl_num, buffer + buff_i, sizeof(double));
+                buff_i += sizeof(double);
+
+            } else if ((spu->code)[codeLength - 1].int_num == (REGISTER_MOD)) {
+                memcpy(&(spu->code)[codeLength++].int_num, buffer + buff_i, sizeof(int));
+                buff_i += sizeof(int);
+
+            } else {
+                memcpy(&(spu->code)[codeLength++].dbl_num, buffer + buff_i, sizeof(double));
+
+                buff_i += sizeof(double);
+            }
+        }
     }
+
+    spu->codeLength = codeLength;
     
     return COMMANDS_WAS_GETTED_SUCCSESSFULLY;
 
 }
 
-static void addZeroTerminator_splitLineIntoWords(char* buffer, const size_t numberOfStrings){
-
-    size_t buffer_i = 0;
-    //printf("%d\n", numberOfStrings);
-
-    for (size_t j = 0; j < numberOfStrings;){
-        
-        if (buffer[buffer_i] == '\n'){
-            buffer[buffer_i] = '\0';
-            j++;
-        }   else if (isspace(buffer[buffer_i])){
-            buffer[buffer_i] = '_';
-        }
-        //printf("%c", buffer[buffer_i]);
-        ++buffer_i;
-    }
-
-}

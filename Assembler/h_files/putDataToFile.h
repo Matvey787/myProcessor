@@ -8,6 +8,7 @@
 #include <assert.h>
 #include "commands.h"
 
-void putDataToFile(command_t* commands, size_t length, const char* file_name);
+void putDataToFileCode(command_t* commands, size_t length, const char* file_name);
+void putDataToFileBinaryCode(command_t* commands, size_t length, const char* file_name);
 
 #endif
