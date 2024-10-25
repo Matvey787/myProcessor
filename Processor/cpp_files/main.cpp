@@ -21,9 +21,7 @@ int main(){
     // read commmands from assembler
     char* buffer = nullptr;
     getData_of_BinaryFile(&buffer, programCode_FileName);
-    //printf("%s %d\n", buffer, numberOfElements);
-    /* for (int i = 0; i < numberOfElements; i++)
-        printf("%c\n", buffer[i]); */
+
     // create soft processing unit
     spu_t spu = {};
     initSpu(&spu);
@@ -41,6 +39,7 @@ int main(){
 }
 
 void initSpu(spu_t* spu){
+    assert((spu != nullptr) && "spu is nullptr in initSpu");
     spu->ip = 0;
     MACRO_stackInit(&spu->stack);
     spu->code = nullptr;
@@ -48,7 +47,7 @@ void initSpu(spu_t* spu){
 }
 
 void destroySpu(spu_t* spu){
-
+    assert((spu != nullptr) && "spu is nullptr in destroySpu");
     free(spu->code);
     free(spu->RAM);
     stackDestroy(&spu->stack);

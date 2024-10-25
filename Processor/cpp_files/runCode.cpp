@@ -33,7 +33,7 @@ double* getAddress(spu_t* spu);
 const double c_compareZero = 0.001;
 
 void runCode(spu_t* spu MYSBS(, size_t numberOfCommands)){
-
+    assert((spu != nullptr) && "spu is nullptr in runCode");
     MYSBS(initscr();)
     MYSBS(writeCode(spu, numberOfCommands);)
     MYSBS(endwin();)
@@ -52,6 +52,7 @@ void runCode(spu_t* spu MYSBS(, size_t numberOfCommands)){
 }
 
 short executeCurrentCommand(const progCommands cmd, spu_t* spu){
+    assert((spu != nullptr) && "spu is nullptr in executeCurrentCommand");
     StackElem_t firstNum = 0;
     StackElem_t secondNum = 0;
     StackElem_t poppedNum = 0;

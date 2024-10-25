@@ -7,7 +7,9 @@
 #include "../h_files/getData_of_BinaryFile.h"
 
 size_t getData_of_BinaryFile(char** buffer, const char* file_name){
-
+    assert((file_name != nullptr) && "bad file name in getData_of_BinaryFile");
+    assert((buffer != nullptr) && "buffer is nullptr in getData_of_BinaryFile");
+    
     // open file for read
 
     FILE* rFile = fopen(file_name, "rb");

@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <ncurses.h>
 #include <string.h>
+#include <assert.h>
 
 #include "../../workWithStack/h_files/stackPushPop.h"
 #include "../../workWithStack/h_files/macros.h"
@@ -19,6 +20,7 @@ void printwRegisters(spu_t* spu, int yCoord_Registers);
 static int yCoord_stack_globVar = 0;
 
 int stepByStep(spu_t* spu){
+    assert(spu != nullptr && "spu is nullptr in stepBystep");
     curs_set(0);
 
     // get x size of cmd screen

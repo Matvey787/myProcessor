@@ -25,8 +25,6 @@ getComStatuses getCommands(spu_t* spu, char* buffer){
         if ( indexOfCurrentCommand == COMMAND_HLT)
             break;
 
-        // TODO make more simple (parse args universally for all opcodes)
-
         if (indexOfCurrentCommand == COMMAND_POP){
             memcpy(&(spu->code)[codeLength++].int_num, buffer + buff_i, sizeof(int));
             buff_i += sizeof(int);
