@@ -54,6 +54,7 @@ int main(){
 }
 
 void myCallocOfCommands(command_t** commands, size_t numberOfStrings){
+    assert(commands != nullptr && "commands is nullptr in myCallocOfCommands");
 
     *commands = (command_t*)calloc(sizeof(command_t), numberOfStrings);
 
@@ -66,6 +67,7 @@ void myCallocOfCommands(command_t** commands, size_t numberOfStrings){
 }
 
 void myCallocOfLabels(labelsData_t* lData, size_t size){
+    assert(lData != nullptr && "lData is nullptr in myCallocOfCommands");
 
     lData->labels = (label_t*)calloc(size, sizeof(label_t));
     lData->size = size;

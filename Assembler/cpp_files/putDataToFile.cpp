@@ -8,6 +8,7 @@
 static const double compareZero = 0.0001;
 
 void putDataToFileCode(command_t* commands, size_t length, const char* file_name){
+    assert(commands != nullptr && "commands is nullptr in putDataToFileCode");
 
     FILE* wFile = fopen(file_name, "w");
 
@@ -47,7 +48,8 @@ void putDataToFileCode(command_t* commands, size_t length, const char* file_name
 }
 
 void putDataToFileBinaryCode(command_t* commands, size_t length, const char* file_name){
-    
+    assert(commands != nullptr && "commands is nullptr in putDataToFileBinaryCode");
+
     FILE* wFile = fopen(file_name, "wb");
 
     for (size_t i = 0; i < length; i++){
