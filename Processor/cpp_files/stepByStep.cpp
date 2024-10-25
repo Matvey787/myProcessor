@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <ncurses.h>
 #include <string.h>
+
 #include "../../workWithStack/h_files/stackPushPop.h"
 #include "../../workWithStack/h_files/macros.h"
 #include "../../workWithStack/h_files/stackDump.h"
@@ -76,11 +77,23 @@ void writeCode(spu_t* spu, size_t numberOfCommands){
             printw("|");
             writedInfo = 1;
         }
+        start_color();
+        init_pair(1, COLOR_GREEN, COLOR_BLACK);
+        init_pair(2, COLOR_WHITE, COLOR_BLACK);
+        printw("  [");
+        attron(COLOR_PAIR(1));
+        if (i < 10) {
             
-        if (i > 9) 
-            printw("   [%lu]   |", i);
-        else
-            printw("   [0%lu]   |", i);
+            printw("00%lu", i);
+        }
+        else if (i < 100){
+            printw("0%lu", i);
+        }
+        else {
+            printw("%lu", i);
+        }
+        attron(COLOR_PAIR(2));
+        printw("]   |");
         writedInfo += 11;
     }
 
@@ -140,15 +153,18 @@ void printwCurrentCommand(spu_t* spu, int yCoord_stack){
     cmd = (progCommands)spu->code[spu->ip].int_num;
     printwStak(spu, yCoord_stack);
     printwRegisters(spu, yCoord_stack + 1);
-    
+
+    start_color();
+    init_pair(3, COLOR_YELLOW, COLOR_BLACK);
+    attron(COLOR_PAIR(3));
     switch (cmd)
     {
     case COMMAND_PUSH:
-        printw("(push)--mod----^");
+        printw("(push)--mode----^");
         break;
 
     case COMMAND_POP:
-        printw("(pop)--mod----^");
+        printw("(pop)--mode----^");
         break;
 
     case COMMAND_ADD:
@@ -191,15 +207,21 @@ void printwCurrentCommand(spu_t* spu, int yCoord_stack){
     case COMMAND_JAE:
         printw("(jae)-----^");
         break;
-    
+
+    case COMMAND_SQRT:
+        printw("(sqrt)");
+        break;
+
     case COMMAND_HLT:
         printw("(hlt)");
         break;
+
     case NOT_COMMAND:
     default:
         printw("(err)");
         break;
     }
+    attron(COLOR_PAIR(2));
 }
 
 void printwOut(spu_t* spu, int yCoord_out){
@@ -213,12 +235,12 @@ void printwOut(spu_t* spu, int yCoord_out){
     StackElem_t poppedNum = stackPop(&(spu->stack));
 
     move(yCoord_out, 5 + indentForOut);
-    printw("%lg", poppedNum);
+    printw("%.2f", poppedNum);
     refresh();
 
     move(old_y, old_x);
 
-    indentForOut += 4;
+    indentForOut += 8;
 }
 
 void printwStak(spu_t* spu, int yCoord_stack){

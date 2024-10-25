@@ -19,20 +19,21 @@ size_t getFileStrings(char** buffer, const char* file_name){
     // find size of file
 
     fseek(rFile, 0, SEEK_END);
-    size_t size = (size_t)ftell(rFile);
+    long int size = ftell(rFile);
+    if (size == -1L) return 0;
     fseek(rFile, 0, SEEK_SET);
 
     // read text from file
 
-    *buffer = (char*)calloc(size + 1, sizeof(char));
+    *buffer = (char*)calloc((size_t)(size + 1), sizeof(char));
     assert(buffer && "couldn't allocate memory in getFileStrs");
-    fread(*buffer, sizeof(char), size, rFile);
+    fread(*buffer, sizeof(char), (size_t)size, rFile);
 
     // find number of strings
     size_t numberOfStrings = 0;
     short isLineWithoutLineTransfer = 0;
 
-    for (size_t i = 0; i < size; i++)
+    for (size_t i = 0; i < (size_t)size; i++)
         if ((*buffer)[i] == '\n') {
 
             isLineWithoutLineTransfer = 0;

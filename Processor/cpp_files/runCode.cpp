@@ -24,7 +24,13 @@ double* getAddress(spu_t* spu);
 #define STOP_RUN 0
 #define CONTINUE_RUN 1
 
-const double compareZero = 0.001;
+#define MACRO_CASE_JUMP(...) firstNum = stackPop(&(spu->stack)); \
+                            secondNum = stackPop(&(spu->stack)); \
+                            __VA_ARGS__ \
+                            stackPush(&(spu->stack), secondNum); \
+                            stackPush(&(spu->stack), firstNum);
+
+const double c_compareZero = 0.001;
 
 void runCode(spu_t* spu MYSBS(, size_t numberOfCommands)){
 
@@ -107,19 +113,30 @@ short executeCurrentCommand(const progCommands cmd, spu_t* spu){
         }
         break;
 
+    // ----------------------------------------------------------------------------  SQRT  ------------------------------------------------------------------
+    case COMMAND_SQRT:
+        firstNum = stackPop(&(spu->stack));
+        if (firstNum >= 0){
+            stackPush(&(spu->stack), sqrt(firstNum));
+            
+        } else {
+            printf("root of a negative number");
+            return STOP_RUN;
+        }
+        break;
+
     // ----------------------------------------------------------------------------  OUT  ------------------------------------------------------------------
     case COMMAND_OUT:
-        #ifndef STEPBYSTEP
+#ifndef STEPBYSTEP
         poppedNum = stackPop(&(spu->stack));
         printf("Out: %lg\n", poppedNum);
-        #endif
+#endif
         
         break;
 
     // ----------------------------------------------------------------------------  IN  ------------------------------------------------------------------
     case COMMAND_IN:
-        printf("Enter a number: ");
-
+        
         getCoeff("Enter a number: ", &firstNum);
 
         stackPush(&(spu->stack), firstNum);
@@ -127,51 +144,40 @@ short executeCurrentCommand(const progCommands cmd, spu_t* spu){
         break;
 
     // ----------------------------------------------------------------------------  JA  ------------------------------------------------------------------
-    case COMMAND_JA: // TODO remove copypaste
-        firstNum = stackPop(&(spu->stack));
-        secondNum = stackPop(&(spu->stack));
-        if (secondNum > firstNum){
+    case COMMAND_JA:
+        MACRO_CASE_JUMP(
+            if (secondNum > firstNum){
 
-            spu->ip = (size_t)((spu->code)[++spu->ip].dbl_num);
+            spu->ip = (size_t)((spu->code)[spu->ip].dbl_num);
         } else 
             spu->ip += 1;
-
-        stackPush(&(spu->stack), secondNum);
-        stackPush(&(spu->stack), firstNum);
+        )
         break;
 
     // ----------------------------------------------------------------------------  JE  ------------------------------------------------------------------
     case COMMAND_JE:
-        firstNum = stackPop(&(spu->stack));
-        secondNum = stackPop(&(spu->stack));
-        if (fabs(secondNum - firstNum) <= compareZero)
-            spu->ip = (size_t)(spu->code)[++spu->ip].dbl_num;
+        MACRO_CASE_JUMP(
+            if (fabs(secondNum - firstNum) <= c_compareZero)
+            spu->ip = (size_t)(spu->code)[spu->ip].dbl_num;
         else 
             spu->ip += 1;
-
-        stackPush(&(spu->stack), secondNum);
-        stackPush(&(spu->stack), firstNum);
-
+        )
         break;
 
     // ----------------------------------------------------------------------------  JAE  ------------------------------------------------------------------
     case COMMAND_JAE:
-        firstNum = stackPop(&(spu->stack));
-        secondNum = stackPop(&(spu->stack));
+        MACRO_CASE_JUMP(
         if (secondNum >= firstNum)
-            spu->ip = (size_t)(spu->code)[++spu->ip].dbl_num;
+            spu->ip = (size_t)(spu->code)[spu->ip].dbl_num;
         else 
             spu->ip += 1;
-            
-        stackPush(&(spu->stack), secondNum);
-        stackPush(&(spu->stack), firstNum);
+        )
         break;
 
     // ----------------------------------------------------------------------------  JMP  ------------------------------------------------------------------
     case COMMAND_JMP:
-        spu->ip = (size_t)(spu->code)[++spu->ip].dbl_num;
+        spu->ip = (size_t)(spu->code)[spu->ip].dbl_num;
 
-        ++spu->ip;
         break;
 
     // ----------------------------------------------------------------------------  HLT  ------------------------------------------------------------------

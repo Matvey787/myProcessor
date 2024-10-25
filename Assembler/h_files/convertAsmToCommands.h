@@ -17,6 +17,6 @@ enum convertationStatuses{
 };
 
 convertationStatuses convertAsmToCommands(command_t* commands, char* buffer, const size_t numberOfStrings,
-                                          const char* asmFileName, labelsData_t* labels);
+                                          const char* asmFileName, labelsData_t* labels, short numPass);
 
 #endif

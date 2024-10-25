@@ -27,8 +27,8 @@ void putDataToFileCode(command_t* commands, size_t length, const char* file_name
             fputs("\n", wFile);
         }
         
-        if (commands[i].mod > 0) {
-            fprintf(wFile, "%d", commands[i].mod);
+        if (commands[i].mode > 0) {
+            fprintf(wFile, "%d", commands[i].mode);
             fputs("\n", wFile);
         }
 
@@ -52,14 +52,14 @@ void putDataToFileBinaryCode(command_t* commands, size_t length, const char* fil
 
     for (size_t i = 0; i < length; i++){
         
-        printf("%d %d %d %lg\n", commands[i].com, commands[i].mod, commands[i].reg, commands[i].num);
+        //printf("%d %d %d %lg\n", commands[i].com, commands[i].mode, commands[i].reg, commands[i].num);
 
         if (commands[i].com >= 0){
             fwrite(&commands[i].com, sizeof(int), 1, wFile);
         }
 
-        if (commands[i].mod > 0) {
-            fwrite(&commands[i].mod, sizeof(int), 1, wFile);
+        if (commands[i].mode > 0) {
+            fwrite(&commands[i].mode, sizeof(int), 1, wFile);
         }
         
         if (!isnan(commands[i].num)) {

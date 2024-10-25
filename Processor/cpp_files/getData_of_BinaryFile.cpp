@@ -11,7 +11,7 @@ size_t getData_of_BinaryFile(char** buffer, const char* file_name){
     // open file for read
 
     FILE* rFile = fopen(file_name, "rb");
-
+    assert(rFile && "can't open binary file");
     // find size of file
 
     fseek(rFile, 0, SEEK_END);

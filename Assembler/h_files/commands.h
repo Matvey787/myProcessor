@@ -15,6 +15,8 @@ enum progCommands {
     COMMAND_OUT = 7,
     COMMAND_IN = 8,
 
+    COMMAND_SQRT = 9,
+
     COMMAND_JA = 11,
     COMMAND_JAE = 12,
     COMMAND_JE = 13,
@@ -31,7 +33,7 @@ enum modifiers{
 };
 struct command_t {
     progCommands com;
-    int mod;
+    int mode;
     progRegisters reg;
     double num;
 };

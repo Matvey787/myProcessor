@@ -1,11 +1,3 @@
-IN
-POP [0]
-IN
-POP [1]
-IN
-POP [2]
-PUSH [0]
-PUSH [0]
-
+    PUSH 100
 OUT
 HLT

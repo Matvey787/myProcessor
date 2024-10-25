@@ -14,7 +14,8 @@ enum progCommands {
 
     COMMAND_OUT = 7,
     COMMAND_IN = 8,
-
+    COMMAND_SQRT = 9,
+    
     COMMAND_JA = 11,
     COMMAND_JAE = 12,
     COMMAND_JE = 13,

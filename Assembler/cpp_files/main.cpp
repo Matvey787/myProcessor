@@ -11,41 +11,35 @@
 
 #include "../h_files/commands.h"
 #include "../h_files/label.h"
-/* #include "../workWithStack/h_files/stressTests.h"
-#include "../workWithStack/h_files/stackConstructor.h"
-#include "../workWithStack/h_files/stackPushPop.h"
-#include "../workWithStack/h_files/errorNames.h"
-#include "../workWithStack/h_files/stackInitDestroy.h"
-#include "../workWithStack/h_files/stackDump.h"
-#include "../workWithStack/h_files/macros.h" */
 
 void myCallocOfCommands(command_t** commands, size_t numberOfStrings);
 void myCallocOfLabels(labelsData_t* lData, size_t size);
 
+const short numberOfLbls = 10;
 int main(){
     
     //files
-    char assembler_FileName[] = "../PROGRAM.ASM";
+    char assembler_FileName[] = "../QUAD.ASM";
     char programCode_FileName[] = "../program_code.txt";
     char programBinaryCode_FileName[] = "../program_BinaryCode.txt";
 
     // read commmands from assembler
     char* buffer = nullptr;
-    size_t numberOfStrings = getFileStrings(&buffer, assembler_FileName);
-    //printf("%lu\n", numberOfStrings);
+    size_t numberOfStrings = getFileStrings(&buffer, assembler_FileName); // FIXME check error
 
-    // convert buffer to commands
+    // create array for commands
     command_t* commands = nullptr;
-    labelsData_t lData;
-
-    myCallocOfLabels(&lData, 10);
-
     myCallocOfCommands(&commands, numberOfStrings); // creation and initialization of commands 
 
-    if (convertAsmToCommands(commands, buffer, numberOfStrings, assembler_FileName, &lData)){
-        /* for (size_t i = 0; i < numberOfStrings; i++){
-            printf("%d %d %lg\n", commands[i].com, commands[i].reg, commands[i].num);
-        } */
+    // create data for labels
+    labelsData_t lData = {};
+    myCallocOfLabels(&lData, numberOfLbls);
+
+    convertationStatuses firCompStatus = convertAsmToCommands(commands, buffer, numberOfStrings, assembler_FileName, &lData, 1);
+    convertationStatuses secCompStatus = convertAsmToCommands(commands, buffer, numberOfStrings, assembler_FileName, &lData, 2);
+
+    if (firCompStatus && secCompStatus){
+        
         putDataToFileCode(commands, numberOfStrings, programCode_FileName);
         putDataToFileBinaryCode(commands, numberOfStrings, programBinaryCode_FileName);
     } else {
@@ -64,10 +58,10 @@ void myCallocOfCommands(command_t** commands, size_t numberOfStrings){
     *commands = (command_t*)calloc(sizeof(command_t), numberOfStrings);
 
     for (size_t i = 0; i < numberOfStrings; i++){
-        (*commands)[i].com = NOT_COMMAND;
-        (*commands)[i].reg = NOT_REGISTER;
-        (*commands)[i].num = NAN;
-        (*commands)[i].mod = -1;
+        (*commands)[i].com  = NOT_COMMAND;
+        (*commands)[i].reg  = NOT_REGISTER;
+        (*commands)[i].num  = NAN;
+        (*commands)[i].mode = -1;
     }
 }
 
