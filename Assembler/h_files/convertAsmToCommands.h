@@ -7,6 +7,7 @@
 #include <string.h>
 #include <assert.h>
 #include "commands.h"
+#include "label.h"
 
 const short FIRST_LINES_INFO_OF_FILE = 3;
 
@@ -15,6 +16,7 @@ enum convertationStatuses{
     CONVERTATION_FAIL = 0
 };
 
-convertationStatuses convertAsmToCommands(command_t* commands, char* buffer, const size_t numberOfStrings, const char* asmFileName);
+convertationStatuses convertAsmToCommands(command_t* commands, char* buffer, const size_t numberOfStrings,
+                                          const char* asmFileName, labelsData_t* labels, short numPass);
 
 #endif

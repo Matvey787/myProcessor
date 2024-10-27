@@ -1,60 +1,120 @@
-#include "../h_files/getFileStrings.h"
+#include "../h_files/getData_of_BinaryFile.h"
 #include "../h_files/getCommands.h"
+#include "../h_files/spu.h"
+#include "../h_files/commands.h"
+#include "math.h"
+const size_t c_numOfCommmands = 1000;
 
-static void addZeroTerminator_splitLineIntoWords(char* buffer, const size_t numberOfStrings);
+static getComStatuses getArgs_POP(spu_t* spu, size_t* codeLength, char* buffer, size_t* buff_i);
+static getComStatuses getArgs_JMPS(spu_t* spu, size_t* codeLength, char* buffer, size_t* buff_i);
+static getComStatuses getArgs_PUSH(spu_t* spu, size_t*codeLength, char* buffer, size_t* buff_i);
 
-size_t getCommands(char*** code, char* buffer, const size_t numberOfStrings){
+getComStatuses getCommands(spu_t* spu, char* buffer){
+    assert(buffer != nullptr);
+    spu->code = (number_t*)calloc(sizeof(number_t), c_numOfCommmands);
 
-    *code = (char**)calloc(sizeof(char**), numberOfStrings - FIRST_LINES_INFO_OF_FILE);
-    
-    addZeroTerminator_splitLineIntoWords(buffer, numberOfStrings);
+    for (size_t i = 0; i < c_numOfCommmands; i++){
+        spu->code[i].dbl_num = NAN;
+        spu->code[i].int_num = -1;
+    }
 
-    size_t passedLines = 0;
     size_t buff_i = 0;
-
-    char command[200] = {};
+    size_t codeLength = 0;
+    int indexOfCurrentCommand = 0;
 
     while(1){
-
-        sscanf(buffer + buff_i, "%s", command);
-
-        if (passedLines < FIRST_LINES_INFO_OF_FILE){
-            
-            buff_i += strlen(command) + 1;
-            passedLines += 1;
-            continue;
-
-        } else {
-            (*code)[passedLines - FIRST_LINES_INFO_OF_FILE] = buffer + buff_i;
-        }
-
-        passedLines += 1;
-
-        if (passedLines == numberOfStrings)
+        //printf("%p\n", buffer + buff_i);
+        memcpy(&((spu->code)[codeLength++].int_num), buffer + buff_i, sizeof(int));
+        buff_i += sizeof(int);
+        indexOfCurrentCommand = (spu->code)[codeLength - 1].int_num;
+        
+        if (indexOfCurrentCommand == COMMAND_HLT)
             break;
 
-        buff_i += strlen(command) + 1;
+        if (indexOfCurrentCommand == COMMAND_POP){
+            if (getArgs_POP(spu, &codeLength, buffer, &buff_i) == SOMETHING_GO_WRONG_WITH_GETTING_COMMANDS)
+                return SOMETHING_GO_WRONG_WITH_GETTING_COMMANDS;
+
+        } else if (((COMMAND_JA <= indexOfCurrentCommand) && (indexOfCurrentCommand <= COMMAND_JB))){
+            if (getArgs_JMPS(spu, &codeLength, buffer, &buff_i) == SOMETHING_GO_WRONG_WITH_GETTING_COMMANDS)
+                return SOMETHING_GO_WRONG_WITH_GETTING_COMMANDS;
+
+        } else if (indexOfCurrentCommand == COMMAND_PUSH){
+             if (getArgs_PUSH(spu, &codeLength, buffer, &buff_i) == SOMETHING_GO_WRONG_WITH_GETTING_COMMANDS)
+                return SOMETHING_GO_WRONG_WITH_GETTING_COMMANDS;
+
+        }
     }
+
+    spu->codeLength = codeLength;
     
     return COMMANDS_WAS_GETTED_SUCCSESSFULLY;
 
 }
 
-static void addZeroTerminator_splitLineIntoWords(char* buffer, const size_t numberOfStrings){
+static getComStatuses getArgs_POP(spu_t* spu, size_t* codeLength, char* buffer, size_t* buff_i){
+    memcpy(&(spu->code)[(*codeLength)++].int_num, buffer + *buff_i, sizeof(int));
+    *buff_i += sizeof(int);
+    int mode = (spu->code)[(*codeLength) - 1].int_num;
 
-    size_t buffer_i = 0;
-    //printf("%d\n", numberOfStrings);
+    switch (mode)
+    {
+        case REGISTER_MOD | RAM_MOD:
+        case REGISTER_MOD:
+            memcpy(&(spu->code)[(*codeLength)++].int_num, buffer + *buff_i, sizeof(int));
+            *buff_i += sizeof(int);
+            break;
 
-    for (size_t j = 0; j < numberOfStrings;){
-        
-        if (buffer[buffer_i] == '\n'){
-            buffer[buffer_i] = '\0';
-            j++;
-        }   else if (isspace(buffer[buffer_i])){
-            buffer[buffer_i] = '_';
-        }
-        //printf("%c", buffer[buffer_i]);
-        ++buffer_i;
+        case NUMBER_MOD | RAM_MOD:
+            memcpy(&(spu->code)[(*codeLength)++].dbl_num, buffer + *buff_i, sizeof(double));
+            *buff_i += sizeof(double);
+            break;
+
+        default:
+            return SOMETHING_GO_WRONG_WITH_GETTING_COMMANDS;
+            break;
     }
+    return COMMANDS_WAS_GETTED_SUCCSESSFULLY;
+}
 
+static getComStatuses getArgs_JMPS(spu_t* spu, size_t* codeLength, char* buffer, size_t* buff_i){
+    memcpy(&(spu->code)[(*codeLength)++].dbl_num, buffer + *buff_i, sizeof(double));
+    *buff_i += sizeof(double);
+    return COMMANDS_WAS_GETTED_SUCCSESSFULLY;
+}
+
+static getComStatuses getArgs_PUSH(spu_t* spu, size_t*codeLength, char* buffer, size_t* buff_i){
+    memcpy(&(spu->code)[(*codeLength)++].int_num, buffer + *buff_i, sizeof(int));
+    *buff_i += sizeof(int);
+    int mode = (spu->code)[(*codeLength) - 1].int_num;
+
+    switch (mode)
+    {
+    case (REGISTER_MOD + NUMBER_MOD + RAM_MOD):
+        memcpy(&(spu->code)[(*codeLength)++].dbl_num, buffer + *buff_i, sizeof(double));
+        *buff_i += sizeof(double);
+        memcpy(&(spu->code)[(*codeLength)++].int_num, buffer + *buff_i, sizeof(int));
+        *buff_i += sizeof(int);
+        break;
+    
+    case (REGISTER_MOD + RAM_MOD):
+        memcpy(&(spu->code)[(*codeLength)++].int_num, buffer + *buff_i, sizeof(int));
+        *buff_i += sizeof(int);
+        break;
+
+    case (NUMBER_MOD + RAM_MOD):
+    case NUMBER_MOD:
+        memcpy(&(spu->code)[(*codeLength)++].dbl_num, buffer + *buff_i, sizeof(double));
+        *buff_i += sizeof(double);
+        break;
+
+    case REGISTER_MOD:
+        memcpy(&(spu->code)[(*codeLength)++].int_num, buffer + *buff_i, sizeof(int));
+        *buff_i += sizeof(int);
+        break;
+    default:
+        return SOMETHING_GO_WRONG_WITH_GETTING_COMMANDS;
+        break;
+    }
+    return COMMANDS_WAS_GETTED_SUCCSESSFULLY;
 }

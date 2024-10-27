@@ -14,22 +14,24 @@ enum progCommands {
 
     COMMAND_OUT = 7,
     COMMAND_IN = 8,
-
-    COMMAND_PUSH_REGISTER = 10,
-
+    COMMAND_SQRT = 9,
+    
     COMMAND_JA = 11,
     COMMAND_JAE = 12,
     COMMAND_JE = 13,
     COMMAND_JMP = 14,
+    COMMAND_JNE = 15,
+    COMMAND_JBE = 16,
+    COMMAND_JB = 17,
 
     COMMAND_HLT = 0,
     NOT_COMMAND = -1
 };
 
-struct command_t{
-    progCommands com;
-    progRegisters reg;
-    double num;
+enum modifiers{
+    NUMBER_MOD = 1,
+    REGISTER_MOD = 2,
+    RAM_MOD = 4,
 };
 
 #endif

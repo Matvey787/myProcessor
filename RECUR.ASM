@@ -1,0 +1,19 @@
+PUSH 6
+POP AX
+PUSH 1
+POP BX
+NEXT:
+    PUSH BX
+    PUSH AX
+    MUL
+    POP BX
+    PUSH AX
+    PUSH -1
+    ADD
+    POP AX
+    PUSH AX
+    PUSH 0
+JA NEXT:
+PUSH BX
+OUT
+HLT

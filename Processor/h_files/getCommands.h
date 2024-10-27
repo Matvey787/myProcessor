@@ -2,6 +2,7 @@
 #define GETCOMMANDS
 
 #include <stdio.h>
+#include "spu.h"
 
 const short FIRST_LINES_INFO_OF_FILE = 3;
 
@@ -10,6 +11,6 @@ enum getComStatuses{
     SOMETHING_GO_WRONG_WITH_GETTING_COMMANDS = 0
 };
 
-size_t getCommands(char*** code, char* buffer, const size_t numberOfStrings);
+getComStatuses getCommands(spu_t* spu, char* buffer);
 
 #endif

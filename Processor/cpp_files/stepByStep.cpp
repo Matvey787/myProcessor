@@ -5,42 +5,41 @@
 #include <stdlib.h>
 #include <ncurses.h>
 #include <string.h>
+#include <assert.h>
+#include <float.h>
+#include <math.h>
+
 #include "../../workWithStack/h_files/stackPushPop.h"
 #include "../../workWithStack/h_files/macros.h"
 #include "../../workWithStack/h_files/stackDump.h"
 
-void printwCurrentCommand(spu_t* spu, int commandWithArg, int yCoord_stack);
+void printwCurrentCommand(spu_t* spu, int yCoord_stack);
 void printwOut(spu_t* spu, int yCoord_out);
 void printwStak(spu_t* spu, int yCoord_stack);
 void printRegisterName(progRegisters indexOfRegister);
-void printwStak(spu_t* spu, int yCoord_stack);
 void printwRegisters(spu_t* spu, int yCoord_Registers);
 
 static int yCoord_stack_globVar = 0;
+const double c_compareZero = 0.001;
 
-int stepByStep(spu_t* spu, int commandWithArg){
+int stepByStep(spu_t* spu){
+    assert(spu != nullptr && "spu is nullptr in stepBystep");
     curs_set(0);
-    // get size of cmd screen
-    int yCmdLineSize = 0;
-    int xCmdLineSize = 0;
-    getmaxyx(stdscr, yCmdLineSize, xCmdLineSize);
 
-    static int yCoord_pointer = 2;
-
-    int d = (int)(spu->ip*10 + spu->ip) ;
+    // get x size of cmd screen
+    int xCmdLineSize = getmaxx(stdscr);
 
     int max_column = xCmdLineSize / 11;
 
-    int row = spu->ip / max_column;
-    int col = spu->ip % max_column;
+    int row = (int)spu->ip / max_column;
+    int col = (int)spu->ip % max_column;
 
-    row = row * 3 + 2;
+    row = row * 3 + 2; // FIXME make consts
     col = col * 11;
 
     move(row, col);
     printw("^");
-    refresh();
-    printwCurrentCommand(spu, commandWithArg, yCoord_stack_globVar);
+    printwCurrentCommand(spu, yCoord_stack_globVar);
 
     refresh();
     int c = 0;
@@ -49,8 +48,8 @@ int stepByStep(spu_t* spu, int commandWithArg){
     while((c = getch()) != 'q');
     if (c == 'q'){ move(row, col); clrtoeol();};
 
-    row = (spu->ip + 1) / max_column;
-    col = (spu->ip +1) % max_column;
+    row = (int)(spu->ip + 1) / max_column;
+    col = (int)(spu->ip +1) % max_column;
     row = row * 3 + 2;
     col = col * 11;
 
@@ -58,10 +57,10 @@ int stepByStep(spu_t* spu, int commandWithArg){
 }
 
 void writeCode(spu_t* spu, size_t numberOfCommands){
+
     // get size of cmd screen
-    int yCmdLineSize = 0;
-    int xCmdLineSize = 0;
-    getmaxyx(stdscr, yCmdLineSize, xCmdLineSize);
+    int xCmdLineSize = getmaxx(stdscr);
+    
 
     //printw("%d %d", yCmdLineSize, xCmdLineSize);
     int writedInfo = 0;
@@ -83,11 +82,23 @@ void writeCode(spu_t* spu, size_t numberOfCommands){
             printw("|");
             writedInfo = 1;
         }
+        start_color();
+        init_pair(1, COLOR_GREEN, COLOR_BLACK);
+        init_pair(2, COLOR_WHITE, COLOR_BLACK);
+        printw("  [");
+        attron(COLOR_PAIR(1));
+        if (i < 10) {
             
-        if (i > 9) 
-            printw("   [%lu]   |", i);
-        else
-            printw("   [0%lu]   |", i);
+            printw("00%lu", i);
+        }
+        else if (i < 100){
+            printw("0%lu", i);
+        }
+        else {
+            printw("%lu", i);
+        }
+        attron(COLOR_PAIR(2));
+        printw("]   |");
         writedInfo += 11;
     }
 
@@ -105,10 +116,23 @@ void writeCode(spu_t* spu, size_t numberOfCommands){
             writedInfo = 1;
         }
 
-        printw(" %s", spu->code[i]);
-        for (size_t j = 0; j < (9 - strlen(spu->code[i])); j++)
-            printw(" ");
-        printw("|");
+        char codeSellStr[40];
+        if (spu->code[i].int_num >= 0){
+            int codeCell = spu->code[i].int_num;
+            printw(" %d", codeCell);
+            sprintf(codeSellStr, "%d", codeCell);
+            for (size_t j = 0; j < (9 - strlen(codeSellStr)); j++)
+                printw(" ");
+            printw("|");
+
+        } else {
+            double codeCell = spu->code[i].dbl_num;
+            printw(" %lg", codeCell);
+            sprintf(codeSellStr, "%lg", codeCell);
+            for (size_t j = 0; j < (9 - strlen(codeSellStr)); j++)
+                printw(" ");
+            printw("|");
+        }
 
         writedInfo += 11;
     }
@@ -128,38 +152,24 @@ void writeCode(spu_t* spu, size_t numberOfCommands){
     refresh();
 }
 
-void printwCurrentCommand(spu_t* spu, int commandWithArg, int yCoord_stack){
+void printwCurrentCommand(spu_t* spu, int yCoord_stack){
     progCommands cmd = NOT_COMMAND;
 
-    if (commandWithArg)
-        cmd = (progCommands)atoi(spu->code[spu->ip - 1]);
-    else{
-        cmd = (progCommands)atoi(spu->code[spu->ip]);
-        printwStak(spu, yCoord_stack);
-        printwRegisters(spu, yCoord_stack + 1);
-    }
-    
+    cmd = (progCommands)spu->code[spu->ip].int_num;
+    printwStak(spu, yCoord_stack);
+    printwRegisters(spu, yCoord_stack + 1);
+
+    start_color();
+    init_pair(3, COLOR_YELLOW, COLOR_BLACK);
+    attron(COLOR_PAIR(3));
     switch (cmd)
     {
     case COMMAND_PUSH:
-        if (commandWithArg)
-            printw("(num)");
-        else
-            printw("(push)");
-        break;
-
-    case COMMAND_PUSH_REGISTER:
-        if (commandWithArg)
-            printw("(reg)");
-        else
-            printw("(pushr)");
+        printw("(push)--mode----^");
         break;
 
     case COMMAND_POP:
-        if (commandWithArg)
-            printw("(reg)");
-        else
-            printw("(pop)");
+        printw("(pop)--mode----^");
         break;
 
     case COMMAND_ADD:
@@ -202,15 +212,33 @@ void printwCurrentCommand(spu_t* spu, int commandWithArg, int yCoord_stack){
     case COMMAND_JAE:
         printw("(jae)-----^");
         break;
+
+    case COMMAND_JNE:
+        printw("(jne)------^");
+        break;
     
+    case COMMAND_JB:
+        printw("(jb)-----^");
+        break;
+    
+    case COMMAND_JBE:
+        printw("(jbe)-----^");
+        break;
+
+    case COMMAND_SQRT:
+        printw("(sqrt)");
+        break;
+
     case COMMAND_HLT:
         printw("(hlt)");
         break;
+
     case NOT_COMMAND:
     default:
         printw("(err)");
         break;
     }
+    attron(COLOR_PAIR(2));
 }
 
 void printwOut(spu_t* spu, int yCoord_out){
@@ -220,16 +248,19 @@ void printwOut(spu_t* spu, int yCoord_out){
     getyx(stdscr, old_y, old_x);
 
     static int indentForOut = 0;
-    //MACRO_stackDump(spu->stack);
+
     StackElem_t poppedNum = stackPop(&(spu->stack));
 
     move(yCoord_out, 5 + indentForOut);
-    printw("%lg", poppedNum);
-    refresh();
+    if (fabs(poppedNum - DBL_MAX) < c_compareZero)
+            printw("inf\n");
+    else
+        printw("%.2f", poppedNum);
 
+    refresh();
     move(old_y, old_x);
 
-    indentForOut += 4;
+    indentForOut += 8;
 }
 
 void printwStak(spu_t* spu, int yCoord_stack){
