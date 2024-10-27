@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 struct label_t {
-    char name[20];
+    char* name;
     int value;
 };
 

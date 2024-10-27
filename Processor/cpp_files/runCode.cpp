@@ -1,6 +1,7 @@
 #include <ncurses.h>
 #include <stdio.h>
 #include <math.h>
+#include <float.h>
 
 #include "../h_files/spu.h"
 #include "../h_files/runCode.h"
@@ -106,11 +107,12 @@ short executeCurrentCommand(const progCommands cmd, spu_t* spu){
     case COMMAND_DIV:
         firstNum = stackPop(&(spu->stack));
         secondNum = stackPop(&(spu->stack));
-        if (firstNum != 0)
+        
+        if (fabs(firstNum) > c_compareZero)
             stackPush(&(spu->stack), secondNum/firstNum);
         else{
-            printf("division by zero");
-            return STOP_RUN;
+            stackPush(&(spu->stack), DBL_MAX);
+            //printf("division by zero");
         }
         break;
 
@@ -130,7 +132,10 @@ short executeCurrentCommand(const progCommands cmd, spu_t* spu){
     case COMMAND_OUT:
 #ifndef STEPBYSTEP
         poppedNum = stackPop(&(spu->stack));
-        printf("Out: %lg\n", poppedNum);
+        if (fabs(poppedNum - DBL_MAX) < c_compareZero)
+            printf("inf\n");
+        else
+            printf("Out: %lg\n", poppedNum);
 #endif
         
         break;

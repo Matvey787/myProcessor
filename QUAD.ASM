@@ -1,8 +1,8 @@
-PUSH 1
+PUSH 3
 POP [0]
-PUSH 100
+PUSH 2
 POP [1]
-PUSH 4
+PUSH -5
 POP [2]
     PUSH [1]
     PUSH [1]

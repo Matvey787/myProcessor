@@ -9,7 +9,7 @@
 #include "../h_files/commands.h"
 #include "../h_files/registers.h"
 
-#define MACRO_WR_ARG(name) error = writeArgument(arg, commands, line, COMMAND_##name, lData, &addedCommands); \
+#define MACRO_WR_ARG(name)  writeArgument(arg, commands, line, COMMAND_##name, lData, &addedCommands); \
                             buff_i += strlen(arg)+1; \
                             break;
 enum errors {
@@ -22,16 +22,24 @@ enum errors {
 };
 
 static errors writeCommandWithoutArg(const char* command, command_t* commands, size_t indexOfCommand);
-static void printTypeOfError(errors error, const char* asmFileName, const size_t line);
-static void addZeroTerminator_splitLineIntoWords(char* buffer, const size_t numberOfStrings);
-static progRegisters getRegisterAddress(const char* command);
-static errors writeArgument(const char* arg, command_t* commands, size_t indexOfCommand, 
-                            progCommands cmdBeforeArg, labelsData_t* lData, size_t* addedCommands);
-void writeToStruct(command_t* commands, size_t indexOfCommand, int mode, double number, char* reg);
 
-int findValueOfLabel(labelsData_t* lData, const char* nameOfLabel);
-errors initLabel(labelsData_t* lData, const char* nameOfLabel, size_t addedCommands);
-errors addLabel(labelsData_t* lData, const char* nameOfLabel);
+static void printTypeOfError(errors error, const char* asmFileName, const size_t line);
+
+static void addZeroTerminator_splitLineIntoWords(char* buffer, const size_t numberOfStrings);
+
+static progRegisters getRegisterAddress(const char* command);
+
+static errors writeArgument(char* arg, command_t* commands, size_t indexOfCommand, 
+                            progCommands cmdBeforeArg, labelsData_t* lData, size_t* addedCommands);
+
+static void writeToStruct(command_t* commands, size_t indexOfCommand, int mode, double number, char* reg);
+
+static int findValueOfLabel(labelsData_t* lData, char* nameOfLabel);
+
+static errors wrLabelAddr(labelsData_t* lData, char* nameOfLabel, size_t addedCommands);
+
+static errors addLabel(labelsData_t* lData, char* nameOfLabel);
+
 
 convertationStatuses convertAsmToCommands(command_t* commands, char* buffer, const size_t numberOfStrings, 
                                           const char* asmFileName, labelsData_t* lData, short numPass){
@@ -56,16 +64,17 @@ convertationStatuses convertAsmToCommands(command_t* commands, char* buffer, con
         
         if (strlen(command) == 0) { buff_i += 1; continue; }
 
+        // check could it be a label
         if ((command[strlen(command) - 1] == ':') && (strlen(command) > 1)){
             if (numPass == 1)
-                error = initLabel(lData, command, addedCommands);
+                error = wrLabelAddr(lData, command, addedCommands);
+
             buff_i += strlen(command)+1;
             ++line;
             continue;
         }
 
         error = writeCommandWithoutArg(command, commands, line);
-        
         
         if (error == NO_ERROR) {
             ++addedCommands;
@@ -74,50 +83,57 @@ convertationStatuses convertAsmToCommands(command_t* commands, char* buffer, con
 
             switch (commands[line].com)
             {
-            case COMMAND_PUSH:
-                
-                MACRO_WR_ARG(PUSH)
-                
-            case COMMAND_POP:
+                case COMMAND_PUSH:
+                    
+                    error = MACRO_WR_ARG(PUSH)
+                    
+                case COMMAND_POP:
 
-                MACRO_WR_ARG(POP)
+                    error = MACRO_WR_ARG(POP)
 
-                /* error = writeArgument(arg, commands, line, COMMAND_POP, lData, &addedCommands);
-                buff_i += strlen(arg)+1;
-                break; */
+                    /* error = writeArgument(arg, commands, line, COMMAND_POP, lData, &addedCommands);
+                    buff_i += strlen(arg)+1;
+                    break; */
 
-            case COMMAND_JA:
-            case COMMAND_JAE:
-            case COMMAND_JE:
-            case COMMAND_JMP:
-                MACRO_WR_ARG(JMP)
+                case COMMAND_JA: // TODO jne, jb, jbe
+                case COMMAND_JAE:
+                case COMMAND_JE:
+                case COMMAND_JMP:
+                    error = MACRO_WR_ARG(JMP)
 
-               /*  error = writeArgument(arg, commands, line, COMMAND_JMP, lData, &addedCommands);
-                buff_i += strlen(arg)+1;
-                break; */
-
-            default:
-                break;
+                /*  error = writeArgument(arg, commands, line, COMMAND_JMP, lData, &addedCommands);
+                    buff_i += strlen(arg)+1;
+                    break; */
+                case COMMAND_ADD:
+                case COMMAND_SUB:
+                case COMMAND_DIV:
+                case COMMAND_MUL:
+                case COMMAND_IN:
+                case COMMAND_OUT:
+                case COMMAND_HLT:
+                case NOT_COMMAND:
+                case COMMAND_SQRT:
+                default:
+                    break;
             }
         }
 
         if (error != NO_ERROR){
-                printTypeOfError(error, asmFileName, line);
-                return CONVERTATION_FAIL; 
-            }
+            printTypeOfError(error, asmFileName, line);
+            return CONVERTATION_FAIL; 
+        }
         line++;
     }
   
     return CONVERTATION_SUCCESS;
 }
-errors initLabel(labelsData_t* lData, const char* nameOfLabel, size_t addedCommands){
+static errors wrLabelAddr(labelsData_t* lData, char* nameOfLabel, size_t addedCommands){ 
     assert(lData != nullptr && "label data is null pointer");
     assert(nameOfLabel != nullptr && "name of label is null pointer");
 
-    addLabel(lData, nameOfLabel);
-
     for (size_t label_index = 0; label_index < lData->size; label_index++){
 
+        if ((lData->labels)[label_index].name != nullptr)
         if (strcmp((lData->labels)[label_index].name, nameOfLabel) == 0){
 
             if ((lData->labels)[label_index].value != -1) return REDEFENITION_OF_LABEL;
@@ -126,17 +142,19 @@ errors initLabel(labelsData_t* lData, const char* nameOfLabel, size_t addedComma
         }
     }
 
+    addLabel(lData, nameOfLabel);
+
     return NO_ERROR;
 }
 
-errors addLabel(labelsData_t* lData, const char* nameOfLabel){
+static errors addLabel(labelsData_t* lData, char* nameOfLabel){
     assert(lData != nullptr && "label data is null pointer in addLabel");
     assert(nameOfLabel != nullptr && "name of label is null pointer in addLabel");
 
     for (size_t label_index = 0; label_index < lData->size; label_index++){
 
-        if (strcmp((lData->labels)[label_index].name, "empty") == 0){
-            strcpy((lData->labels)[label_index].name, nameOfLabel);
+        if ((lData->labels)[label_index].name == nullptr){
+            (lData->labels)[label_index].name = nameOfLabel;
             (lData->labels)[label_index].value = -1;
             return NO_ERROR;
         }
@@ -144,16 +162,17 @@ errors addLabel(labelsData_t* lData, const char* nameOfLabel){
     return NO_MEMORY_FOR_NEW_LABEL;
 }
 
-int findValueOfLabel(labelsData_t* lData, const char* nameOfLabel){
+static int findValueOfLabel(labelsData_t* lData, char* nameOfLabel){
     assert(lData != nullptr && "label data is null pointer in findValueOfLabel");
     assert(nameOfLabel != nullptr && "name of label is null pointer in findValueOfLabel");
     
     for (size_t label_index = 0; label_index < lData->size; label_index++)
+        if ((lData->labels)[label_index].name != nullptr)
         if (strcmp((lData->labels)[label_index].name, nameOfLabel) == 0)
             return (lData->labels)[label_index].value;
 
     errors error = addLabel(lData, nameOfLabel);
-    assert(error != NO_MEMORY_FOR_NEW_LABEL);
+    assert(error != NO_MEMORY_FOR_NEW_LABEL); // FIXME remove and check return value
 
     if (error == NO_MEMORY_FOR_NEW_LABEL) printf("All memory for labels is exhausted.\n \
                                                   Please, reduce number of labels.");
@@ -211,7 +230,7 @@ static errors writeCommandWithoutArg(const char* command, command_t* commands, s
     return NO_ERROR;
 }
 
-static errors writeArgument(const char* arg, command_t* commands, size_t indexOfCommand,
+static errors writeArgument(char* arg, command_t* commands, size_t indexOfCommand,
                             progCommands cmdBeforeArg, labelsData_t* lData, size_t* addedCommands){
     double number = NAN;
     char reg[20] = "NOT_REGISTER";
@@ -219,16 +238,16 @@ static errors writeArgument(const char* arg, command_t* commands, size_t indexOf
     //---------------------------------------------------command push----------------------------------------------------------
     if (cmdBeforeArg == COMMAND_PUSH){
         if (sscanf(arg, "[%lg+%2s]", &number, reg) == 2){
-            writeToStruct(commands, indexOfCommand, REGISTER_MOD + NUMBER_MOD + RAM_MOD, number, reg);
+            writeToStruct(commands, indexOfCommand, REGISTER_MOD | NUMBER_MOD | RAM_MOD, number, reg);
             *addedCommands += 3;
 
 
         } else if (sscanf(arg, "[%lg]", &number) == 1){
-            writeToStruct(commands, indexOfCommand, NUMBER_MOD + RAM_MOD, number, reg);
+            writeToStruct(commands, indexOfCommand, NUMBER_MOD | RAM_MOD, number, reg);
             *addedCommands += 2;
 
         } else if (sscanf(arg, "[%s]", reg) == 1){
-            writeToStruct(commands, indexOfCommand, REGISTER_MOD + RAM_MOD, number, reg);
+            writeToStruct(commands, indexOfCommand, REGISTER_MOD | RAM_MOD, number, reg);
             *addedCommands += 2;
 
         } else if (sscanf(arg, "%lg", &number) == 1){
@@ -249,10 +268,10 @@ static errors writeArgument(const char* arg, command_t* commands, size_t indexOf
 
     else if (cmdBeforeArg == COMMAND_POP){
         if (sscanf(arg, "[%lg]", &number) == 1){
-            writeToStruct(commands, indexOfCommand, NUMBER_MOD + RAM_MOD, number, reg);      
+            writeToStruct(commands, indexOfCommand, NUMBER_MOD | RAM_MOD, number, reg);      
             
         } else if (sscanf(arg, "[%2s]", reg) == 1){
-            writeToStruct(commands, indexOfCommand, REGISTER_MOD + RAM_MOD, number, reg);           
+            writeToStruct(commands, indexOfCommand, REGISTER_MOD | RAM_MOD, number, reg);           
         
         }else if (sscanf(arg, "%2s", reg) == 1){
             writeToStruct(commands, indexOfCommand, REGISTER_MOD, number, reg);
@@ -268,14 +287,14 @@ static errors writeArgument(const char* arg, command_t* commands, size_t indexOf
     } else if (cmdBeforeArg == COMMAND_JMP || cmdBeforeArg == COMMAND_JE || cmdBeforeArg == COMMAND_JAE || 
                                                                             cmdBeforeArg == COMMAND_JA){
 
-                commands[indexOfCommand].num = findValueOfLabel(lData, arg);
-                *addedCommands += 1;
-            }
+        commands[indexOfCommand].num = findValueOfLabel(lData, arg);
+        *addedCommands += 1;
+    }
     return NO_ERROR;
 
 }
 
-void writeToStruct(command_t* commands, size_t indexOfCommand, int mode, double number, char* reg){
+static void writeToStruct(command_t* commands, size_t indexOfCommand, int mode, double number, char* reg){
     commands[indexOfCommand].mode = mode;
     commands[indexOfCommand].num = number;
     commands[indexOfCommand].reg = getRegisterAddress(reg);
@@ -308,29 +327,29 @@ static void printTypeOfError(errors error, const char* asmFileName, const size_t
 
     switch (error)
     {
-    case INCORRECT_COMMAND:
-        fprintf(stderr, "INCORRECT_COMMAND");
-        break;
-    case NO_CORRECT_NUMBER_OR_REGISTER_AFTER_COMMAND:
-        fprintf(stderr, "NO_CORRECT_NUMBER_OR_REGISTER_AFTER_COMMAND");
-        break;
+        case INCORRECT_COMMAND:
+            fprintf(stderr, "INCORRECT_COMMAND");
+            break;
+        case NO_CORRECT_NUMBER_OR_REGISTER_AFTER_COMMAND:
+            fprintf(stderr, "NO_CORRECT_NUMBER_OR_REGISTER_AFTER_COMMAND");
+            break;
 
-    case NO_CORRECT_REGISTER_AFTER_COMMAND:
-        fprintf(stderr, "NO_CORRECT_REGISTER_AFTER_COMMAND");
-        break;
-    case REDEFENITION_OF_LABEL:
-        fprintf(stderr, "REDEFENITION_OF_LABEL");
-        break;
+        case NO_CORRECT_REGISTER_AFTER_COMMAND:
+            fprintf(stderr, "NO_CORRECT_REGISTER_AFTER_COMMAND");
+            break;
+        case REDEFENITION_OF_LABEL:
+            fprintf(stderr, "REDEFENITION_OF_LABEL");
+            break;
 
-    case NO_MEMORY_FOR_NEW_LABEL:
-        fprintf(stderr, "NO_MEMORY_FOR_NEW_LABEL");
-        break;
+        case NO_MEMORY_FOR_NEW_LABEL:
+            fprintf(stderr, "NO_MEMORY_FOR_NEW_LABEL");
+            break;
 
-    case NO_ERROR:
-        break;
+        case NO_ERROR:
+            break;
 
-    default:
-        break;
+        default:
+            break;
     }
 
     fprintf(stderr, "]\n");

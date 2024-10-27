@@ -6,6 +6,8 @@
 #include <ncurses.h>
 #include <string.h>
 #include <assert.h>
+#include <float.h>
+#include <math.h>
 
 #include "../../workWithStack/h_files/stackPushPop.h"
 #include "../../workWithStack/h_files/macros.h"
@@ -18,6 +20,7 @@ void printRegisterName(progRegisters indexOfRegister);
 void printwRegisters(spu_t* spu, int yCoord_Registers);
 
 static int yCoord_stack_globVar = 0;
+const double c_compareZero = 0.001;
 
 int stepByStep(spu_t* spu){
     assert(spu != nullptr && "spu is nullptr in stepBystep");
@@ -237,9 +240,12 @@ void printwOut(spu_t* spu, int yCoord_out){
     StackElem_t poppedNum = stackPop(&(spu->stack));
 
     move(yCoord_out, 5 + indentForOut);
-    printw("%.2f", poppedNum);
-    refresh();
+    if (fabs(poppedNum - DBL_MAX) < c_compareZero)
+            printw("inf\n");
+    else
+        printw("%.2f", poppedNum);
 
+    refresh();
     move(old_y, old_x);
 
     indentForOut += 8;

@@ -3,12 +3,17 @@
 #include "../h_files/spu.h"
 #include "../h_files/commands.h"
 #include "math.h"
+const size_t c_numOfCommmands = 1000;
+
+static getComStatuses getArgs_POP(spu_t* spu, size_t* codeLength, char* buffer, size_t* buff_i);
+static getComStatuses getArgs_JMPS(spu_t* spu, size_t* codeLength, char* buffer, size_t* buff_i);
+static getComStatuses getArgs_PUSH(spu_t* spu, size_t*codeLength, char* buffer, size_t* buff_i);
 
 getComStatuses getCommands(spu_t* spu, char* buffer){
 
-    spu->code = (number_t*)calloc(sizeof(number_t), 1000);
+    spu->code = (number_t*)calloc(sizeof(number_t), c_numOfCommmands);
 
-    for (int i = 0; i < 1000; i++){
+    for (size_t i = 0; i < c_numOfCommmands; i++){
         spu->code[i].dbl_num = NAN;
         spu->code[i].int_num = -1;
     }
@@ -26,69 +31,16 @@ getComStatuses getCommands(spu_t* spu, char* buffer){
             break;
 
         if (indexOfCurrentCommand == COMMAND_POP){
-            memcpy(&(spu->code)[codeLength++].int_num, buffer + buff_i, sizeof(int));
-            buff_i += sizeof(int);
-            int mode = (spu->code)[codeLength - 1].int_num;
-
-
-            switch (mode)
-            {
-            case REGISTER_MOD + RAM_MOD:
-            case REGISTER_MOD:
-                memcpy(&(spu->code)[codeLength++].int_num, buffer + buff_i, sizeof(int));
-                buff_i += sizeof(int);
-                break;
-
-            case NUMBER_MOD + RAM_MOD:
-                memcpy(&(spu->code)[codeLength++].dbl_num, buffer + buff_i, sizeof(double));
-                buff_i += sizeof(double);
-                break;
-
-            default:
+            if (getArgs_POP(spu, &codeLength, buffer, &buff_i) == SOMETHING_GO_WRONG_WITH_GETTING_COMMANDS)
                 return SOMETHING_GO_WRONG_WITH_GETTING_COMMANDS;
-                break;
-            }
-            
 
         } else if ( ((COMMAND_JA <= indexOfCurrentCommand) && (indexOfCurrentCommand <= COMMAND_JMP))){
-            memcpy(&(spu->code)[codeLength++].dbl_num, buffer + buff_i, sizeof(double));
-            buff_i += sizeof(double);
+            if (getArgs_JMPS(spu, &codeLength, buffer, &buff_i) == SOMETHING_GO_WRONG_WITH_GETTING_COMMANDS)
+                return SOMETHING_GO_WRONG_WITH_GETTING_COMMANDS;
 
         } else if (indexOfCurrentCommand == COMMAND_PUSH){
-            memcpy(&(spu->code)[codeLength++].int_num, buffer + buff_i, sizeof(int));
-            buff_i += sizeof(int);
-            int mode = (spu->code)[codeLength - 1].int_num;
-
-
-            switch (mode)
-            {
-            case (REGISTER_MOD + NUMBER_MOD + RAM_MOD):
-                memcpy(&(spu->code)[codeLength++].dbl_num, buffer + buff_i, sizeof(double));
-                buff_i += sizeof(double);
-                memcpy(&(spu->code)[codeLength++].int_num, buffer + buff_i, sizeof(int));
-                buff_i += sizeof(int);
-                break;
-            
-            case (REGISTER_MOD + RAM_MOD):
-                memcpy(&(spu->code)[codeLength++].int_num, buffer + buff_i, sizeof(int));
-                buff_i += sizeof(int);
-                break;
-
-            case (NUMBER_MOD + RAM_MOD):
-            case NUMBER_MOD:
-                memcpy(&(spu->code)[codeLength++].dbl_num, buffer + buff_i, sizeof(double));
-                buff_i += sizeof(double);
-                break;
-
-            case REGISTER_MOD:
-                memcpy(&(spu->code)[codeLength++].int_num, buffer + buff_i, sizeof(int));
-                buff_i += sizeof(int);
-                break;
-            default:
+             if (getArgs_PUSH(spu, &codeLength, buffer, &buff_i) == SOMETHING_GO_WRONG_WITH_GETTING_COMMANDS)
                 return SOMETHING_GO_WRONG_WITH_GETTING_COMMANDS;
-                break;
-            }
-
 
         }
     }
@@ -99,3 +51,69 @@ getComStatuses getCommands(spu_t* spu, char* buffer){
 
 }
 
+static getComStatuses getArgs_POP(spu_t* spu, size_t* codeLength, char* buffer, size_t* buff_i){
+    memcpy(&(spu->code)[(*codeLength)++].int_num, buffer + *buff_i, sizeof(int));
+    *buff_i += sizeof(int);
+    int mode = (spu->code)[(*codeLength) - 1].int_num;
+
+    switch (mode)
+    {
+        case REGISTER_MOD | RAM_MOD:
+        case REGISTER_MOD:
+            memcpy(&(spu->code)[(*codeLength)++].int_num, buffer + *buff_i, sizeof(int));
+            *buff_i += sizeof(int);
+            break;
+
+        case NUMBER_MOD | RAM_MOD:
+            memcpy(&(spu->code)[(*codeLength)++].dbl_num, buffer + *buff_i, sizeof(double));
+            *buff_i += sizeof(double);
+            break;
+
+        default:
+            return SOMETHING_GO_WRONG_WITH_GETTING_COMMANDS;
+            break;
+    }
+    return COMMANDS_WAS_GETTED_SUCCSESSFULLY;
+}
+
+static getComStatuses getArgs_JMPS(spu_t* spu, size_t* codeLength, char* buffer, size_t* buff_i){
+    memcpy(&(spu->code)[(*codeLength)++].dbl_num, buffer + *buff_i, sizeof(double));
+    *buff_i += sizeof(double);
+    return COMMANDS_WAS_GETTED_SUCCSESSFULLY;
+}
+
+static getComStatuses getArgs_PUSH(spu_t* spu, size_t*codeLength, char* buffer, size_t* buff_i){
+    memcpy(&(spu->code)[(*codeLength)++].int_num, buffer + *buff_i, sizeof(int));
+    *buff_i += sizeof(int);
+    int mode = (spu->code)[(*codeLength) - 1].int_num;
+
+    switch (mode)
+    {
+    case (REGISTER_MOD + NUMBER_MOD + RAM_MOD):
+        memcpy(&(spu->code)[(*codeLength)++].dbl_num, buffer + *buff_i, sizeof(double));
+        *buff_i += sizeof(double);
+        memcpy(&(spu->code)[(*codeLength)++].int_num, buffer + *buff_i, sizeof(int));
+        *buff_i += sizeof(int);
+        break;
+    
+    case (REGISTER_MOD + RAM_MOD):
+        memcpy(&(spu->code)[(*codeLength)++].int_num, buffer + *buff_i, sizeof(int));
+        *buff_i += sizeof(int);
+        break;
+
+    case (NUMBER_MOD + RAM_MOD):
+    case NUMBER_MOD:
+        memcpy(&(spu->code)[(*codeLength)++].dbl_num, buffer + *buff_i, sizeof(double));
+        *buff_i += sizeof(double);
+        break;
+
+    case REGISTER_MOD:
+        memcpy(&(spu->code)[(*codeLength)++].int_num, buffer + *buff_i, sizeof(int));
+        *buff_i += sizeof(int);
+        break;
+    default:
+        return SOMETHING_GO_WRONG_WITH_GETTING_COMMANDS;
+        break;
+    }
+    return COMMANDS_WAS_GETTED_SUCCSESSFULLY;
+}

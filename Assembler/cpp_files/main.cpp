@@ -14,18 +14,30 @@
 
 void myCallocOfCommands(command_t** commands, size_t numberOfStrings);
 void myCallocOfLabels(labelsData_t* lData, size_t size);
+const char c_default_asm_FileName[] = "../QUAD.ASM";
 
-const short numberOfLbls = 10;
-int main(){
-    
+const short c_numOfLbls = 10;
+
+int main(int argc, char* argv[]){
+    char* buffer = nullptr;
+    size_t numberOfStrings = 0;
+
     //files
-    char assembler_FileName[] = "../QUAD.ASM";
+    const char* fileName = nullptr;
+    if (argc > 1){
+        fileName = argv[argc - 1];
+        
+    } else {
+        fileName = c_default_asm_FileName;
+    }
+
+    numberOfStrings = getFileStrings(&buffer, fileName); 
     char programCode_FileName[] = "../program_code.txt";
     char programBinaryCode_FileName[] = "../program_BinaryCode.txt";
 
     // read commmands from assembler
-    char* buffer = nullptr;
-    size_t numberOfStrings = getFileStrings(&buffer, assembler_FileName); // FIXME check error
+    
+    
 
     // create array for commands
     command_t* commands = nullptr;
@@ -33,10 +45,10 @@ int main(){
 
     // create data for labels
     labelsData_t lData = {};
-    myCallocOfLabels(&lData, numberOfLbls);
+    myCallocOfLabels(&lData, c_numOfLbls);
 
-    convertationStatuses firCompStatus = convertAsmToCommands(commands, buffer, numberOfStrings, assembler_FileName, &lData, 1);
-    convertationStatuses secCompStatus = convertAsmToCommands(commands, buffer, numberOfStrings, assembler_FileName, &lData, 2);
+    convertationStatuses firCompStatus = convertAsmToCommands(commands, buffer, numberOfStrings, c_default_asm_FileName, &lData, 1);
+    convertationStatuses secCompStatus = convertAsmToCommands(commands, buffer, numberOfStrings, c_default_asm_FileName, &lData, 2);
 
     if (firCompStatus && secCompStatus){
         
@@ -73,7 +85,7 @@ void myCallocOfLabels(labelsData_t* lData, size_t size){
     lData->size = size;
 
     for (size_t i = 0; i < size; i++){
-        strcpy(lData->labels[i].name, "empty\0"); 
+        lData->labels[i].name = nullptr; 
         lData->labels[i].value = -1; 
     }
 }   

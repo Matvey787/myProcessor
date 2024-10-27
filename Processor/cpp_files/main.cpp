@@ -13,6 +13,8 @@
 void initSpu(spu_t* spu);
 void destroySpu(spu_t* spu);
 
+const size_t c_sizeOfRam = 100;
+
 int main(){
 
     //files
@@ -43,7 +45,8 @@ void initSpu(spu_t* spu){
     spu->ip = 0;
     MACRO_stackInit(&spu->stack);
     spu->code = nullptr;
-    spu->RAM = (StackElem_t*)calloc(100, sizeof(StackElem_t));
+    spu->RAM = (StackElem_t*)calloc(c_sizeOfRam, sizeof(StackElem_t));
+    assert((spu->RAM != nullptr) && "calloc memory fail");
 }
 
 void destroySpu(spu_t* spu){
