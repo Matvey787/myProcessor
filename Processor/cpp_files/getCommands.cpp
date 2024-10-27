@@ -10,7 +10,7 @@ static getComStatuses getArgs_JMPS(spu_t* spu, size_t* codeLength, char* buffer,
 static getComStatuses getArgs_PUSH(spu_t* spu, size_t*codeLength, char* buffer, size_t* buff_i);
 
 getComStatuses getCommands(spu_t* spu, char* buffer){
-
+    assert(buffer != nullptr);
     spu->code = (number_t*)calloc(sizeof(number_t), c_numOfCommmands);
 
     for (size_t i = 0; i < c_numOfCommmands; i++){
@@ -23,18 +23,19 @@ getComStatuses getCommands(spu_t* spu, char* buffer){
     int indexOfCurrentCommand = 0;
 
     while(1){
+        //printf("%p\n", buffer + buff_i);
         memcpy(&((spu->code)[codeLength++].int_num), buffer + buff_i, sizeof(int));
         buff_i += sizeof(int);
         indexOfCurrentCommand = (spu->code)[codeLength - 1].int_num;
         
-        if ( indexOfCurrentCommand == COMMAND_HLT)
+        if (indexOfCurrentCommand == COMMAND_HLT)
             break;
 
         if (indexOfCurrentCommand == COMMAND_POP){
             if (getArgs_POP(spu, &codeLength, buffer, &buff_i) == SOMETHING_GO_WRONG_WITH_GETTING_COMMANDS)
                 return SOMETHING_GO_WRONG_WITH_GETTING_COMMANDS;
 
-        } else if ( ((COMMAND_JA <= indexOfCurrentCommand) && (indexOfCurrentCommand <= COMMAND_JMP))){
+        } else if (((COMMAND_JA <= indexOfCurrentCommand) && (indexOfCurrentCommand <= COMMAND_JB))){
             if (getArgs_JMPS(spu, &codeLength, buffer, &buff_i) == SOMETHING_GO_WRONG_WITH_GETTING_COMMANDS)
                 return SOMETHING_GO_WRONG_WITH_GETTING_COMMANDS;
 

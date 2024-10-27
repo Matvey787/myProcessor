@@ -23,7 +23,7 @@ int main(){
     // read commmands from assembler
     char* buffer = nullptr;
     getData_of_BinaryFile(&buffer, programCode_FileName);
-
+    
     // create soft processing unit
     spu_t spu = {};
     initSpu(&spu);

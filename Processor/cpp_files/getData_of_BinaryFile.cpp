@@ -13,9 +13,12 @@ size_t getData_of_BinaryFile(char** buffer, const char* file_name){
     // open file for read
 
     FILE* rFile = fopen(file_name, "rb");
-    assert(rFile && "can't open binary file");
-    printf("can't open binary file");
-    exit(1);
+    assert((rFile != nullptr) && "can't open binary file");
+    if (rFile == nullptr){
+        printf("can't open binary file");
+        return 0;
+    }
+        
     // find size of file
 
     fseek(rFile, 0, SEEK_END);
@@ -25,7 +28,7 @@ size_t getData_of_BinaryFile(char** buffer, const char* file_name){
     // read text from file
 
     *buffer = (char*)calloc(size, sizeof(char));
-    assert(buffer && "calloc memory fail");
+    assert((*buffer != nullptr) && "calloc memory fail");
     fread(*buffer, sizeof(char), size, rFile);
 
     // close file 

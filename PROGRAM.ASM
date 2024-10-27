@@ -1,3 +1,5 @@
     PUSH 100
-OUT
+    PUSH 10000
+    JB NEXT:
+NEXT:
 HLT

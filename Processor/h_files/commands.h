@@ -20,6 +20,9 @@ enum progCommands {
     COMMAND_JAE = 12,
     COMMAND_JE = 13,
     COMMAND_JMP = 14,
+    COMMAND_JNE = 15,
+    COMMAND_JBE = 16,
+    COMMAND_JB = 17,
 
     COMMAND_HLT = 0,
     NOT_COMMAND = -1

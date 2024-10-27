@@ -213,6 +213,18 @@ void printwCurrentCommand(spu_t* spu, int yCoord_stack){
         printw("(jae)-----^");
         break;
 
+    case COMMAND_JNE:
+        printw("(jne)------^");
+        break;
+    
+    case COMMAND_JB:
+        printw("(jb)-----^");
+        break;
+    
+    case COMMAND_JBE:
+        printw("(jbe)-----^");
+        break;
+
     case COMMAND_SQRT:
         printw("(sqrt)");
         break;

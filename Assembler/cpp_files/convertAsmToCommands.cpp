@@ -98,6 +98,9 @@ convertationStatuses convertAsmToCommands(command_t* commands, char* buffer, con
                 case COMMAND_JA: // TODO jne, jb, jbe
                 case COMMAND_JAE:
                 case COMMAND_JE:
+                case COMMAND_JBE:
+                case COMMAND_JB:
+                case COMMAND_JNE:
                 case COMMAND_JMP:
                     error = MACRO_WR_ARG(JMP)
 
@@ -222,6 +225,15 @@ static errors writeCommandWithoutArg(const char* command, command_t* commands, s
     else if (strcmp(command, "JMP") == 0)
         *command_address = COMMAND_JMP;
 
+    else if (strcmp(command, "JBE") == 0)
+        *command_address = COMMAND_JBE;
+
+    else if (strcmp(command, "JB") == 0)
+        *command_address = COMMAND_JB;
+
+    else if (strcmp(command, "JNE") == 0)
+        *command_address = COMMAND_JNE;
+
     else if (strcmp(command, "HLT") == 0)
         *command_address = COMMAND_HLT;
     else
@@ -284,8 +296,8 @@ static errors writeArgument(char* arg, command_t* commands, size_t indexOfComman
 
     //---------------------------------------------------commands family of jumps----------------------------------------------------------
 
-    } else if (cmdBeforeArg == COMMAND_JMP || cmdBeforeArg == COMMAND_JE || cmdBeforeArg == COMMAND_JAE || 
-                                                                            cmdBeforeArg == COMMAND_JA){
+    } else if (cmdBeforeArg == COMMAND_JMP || cmdBeforeArg == COMMAND_JE || cmdBeforeArg == COMMAND_JAE || cmdBeforeArg == COMMAND_JA ||
+               cmdBeforeArg == COMMAND_JB || cmdBeforeArg == COMMAND_JBE || cmdBeforeArg == COMMAND_JNE){
 
         commands[indexOfCommand].num = findValueOfLabel(lData, arg);
         *addedCommands += 1;

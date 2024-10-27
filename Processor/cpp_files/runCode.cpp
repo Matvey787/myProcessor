@@ -160,6 +160,17 @@ short executeCurrentCommand(const progCommands cmd, spu_t* spu){
         )
         break;
 
+    // ----------------------------------------------------------------------------  JB  ------------------------------------------------------------------
+    case COMMAND_JB:
+        MACRO_CASE_JUMP(
+            if (secondNum < firstNum){
+
+            spu->ip = (size_t)((spu->code)[spu->ip].dbl_num);
+        } else 
+            spu->ip += 1;
+        )
+        break;
+
     // ----------------------------------------------------------------------------  JE  ------------------------------------------------------------------
     case COMMAND_JE:
         MACRO_CASE_JUMP(
@@ -170,10 +181,30 @@ short executeCurrentCommand(const progCommands cmd, spu_t* spu){
         )
         break;
 
+    // ----------------------------------------------------------------------------  JNE  ------------------------------------------------------------------
+    case COMMAND_JNE:
+        MACRO_CASE_JUMP(
+            if (fabs(secondNum - firstNum) > c_compareZero)
+            spu->ip = (size_t)(spu->code)[spu->ip].dbl_num;
+        else 
+            spu->ip += 1;
+        )
+        break;
+
     // ----------------------------------------------------------------------------  JAE  ------------------------------------------------------------------
     case COMMAND_JAE:
         MACRO_CASE_JUMP(
         if (secondNum >= firstNum)
+            spu->ip = (size_t)(spu->code)[spu->ip].dbl_num;
+        else 
+            spu->ip += 1;
+        )
+        break;
+
+    // ----------------------------------------------------------------------------  JBE  ------------------------------------------------------------------
+    case COMMAND_JBE:
+        MACRO_CASE_JUMP(
+        if (secondNum <= firstNum)
             spu->ip = (size_t)(spu->code)[spu->ip].dbl_num;
         else 
             spu->ip += 1;
