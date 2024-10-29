@@ -12,6 +12,10 @@
 #define MACRO_WR_ARG(name)  writeArgument(arg, commands, line, COMMAND_##name, lData, &addedCommands); \
                             buff_i += strlen(arg)+1; \
                             break;
+
+#define DEF_CMD_(name, ...) if (strcmp(command, (#name)) == 0) \
+                                *command_address = COMMAND_##name; \
+                            else
 enum errors {
     NO_ERROR = 0,
     INCORRECT_COMMAND = 2,
@@ -48,10 +52,6 @@ convertationStatuses convertAsmToCommands(command_t* commands, char* buffer, con
     assert(asmFileName != nullptr && "assembler file name is null pointer");
 
     if (numPass == 1) addZeroTerminator_splitLineIntoWords(buffer, numberOfStrings);
-    /* for (int i = 0; i < 10; i++){
-        printf("%s\n", buffer + i);
-    } */
-
     size_t addedCommands = 0;
     errors error = NO_ERROR;
     char* command = nullptr;
@@ -73,7 +73,7 @@ convertationStatuses convertAsmToCommands(command_t* commands, char* buffer, con
             ++line;
             continue;
         }
-
+        
         error = writeCommandWithoutArg(command, commands, line);
         
         if (error == NO_ERROR) {
@@ -91,10 +91,6 @@ convertationStatuses convertAsmToCommands(command_t* commands, char* buffer, con
 
                     error = MACRO_WR_ARG(POP)
 
-                    /* error = writeArgument(arg, commands, line, COMMAND_POP, lData, &addedCommands);
-                    buff_i += strlen(arg)+1;
-                    break; */
-
                 case COMMAND_JA: // TODO jne, jb, jbe
                 case COMMAND_JAE:
                 case COMMAND_JE:
@@ -104,9 +100,6 @@ convertationStatuses convertAsmToCommands(command_t* commands, char* buffer, con
                 case COMMAND_JMP:
                     error = MACRO_WR_ARG(JMP)
 
-                /*  error = writeArgument(arg, commands, line, COMMAND_JMP, lData, &addedCommands);
-                    buff_i += strlen(arg)+1;
-                    break; */
                 case COMMAND_ADD:
                 case COMMAND_SUB:
                 case COMMAND_DIV:
@@ -186,57 +179,9 @@ static errors writeCommandWithoutArg(const char* command, command_t* commands, s
 
     progCommands* command_address = &(commands[indexOfCommand].com);
 
-    if (strcmp(command, "PUSH") == 0)
-        *command_address = COMMAND_PUSH;
+    #include "../h_files/defCommands.h"
 
-    else if (strcmp(command, "POP") == 0)
-        *command_address = COMMAND_POP;
-
-    else if (strcmp(command, "ADD") == 0)
-        *command_address = COMMAND_ADD;
-
-    else if (strcmp(command, "SUB") == 0)
-        *command_address = COMMAND_SUB;
-
-    else if (strcmp(command, "MUL") == 0)
-        *command_address = COMMAND_MUL;
-
-    else if (strcmp(command, "DIV") == 0)
-        *command_address = COMMAND_DIV;
-    
-    else if (strcmp(command, "SQRT") == 0)
-        *command_address = COMMAND_SQRT;
-
-    else if (strcmp(command, "OUT") == 0)
-        *command_address = COMMAND_OUT;
-        
-    else if (strcmp(command, "IN") == 0)
-        *command_address = COMMAND_IN;
-
-    else if (strcmp(command, "JA") == 0)
-        *command_address = COMMAND_JA;
-
-    else if (strcmp(command, "JAE") == 0)
-        *command_address = COMMAND_JAE;
-
-    else if (strcmp(command, "JE") == 0)
-        *command_address = COMMAND_JE;
-
-    else if (strcmp(command, "JMP") == 0)
-        *command_address = COMMAND_JMP;
-
-    else if (strcmp(command, "JBE") == 0)
-        *command_address = COMMAND_JBE;
-
-    else if (strcmp(command, "JB") == 0)
-        *command_address = COMMAND_JB;
-
-    else if (strcmp(command, "JNE") == 0)
-        *command_address = COMMAND_JNE;
-
-    else if (strcmp(command, "HLT") == 0)
-        *command_address = COMMAND_HLT;
-    else
+    //else (go from macro DEF_CMD_)
         return INCORRECT_COMMAND;
 
     return NO_ERROR;
