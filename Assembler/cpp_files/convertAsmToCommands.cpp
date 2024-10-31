@@ -13,9 +13,6 @@
                             buff_i += strlen(arg)+1; \
                             break;
 
-#define DEF_CMD_(name, ...) if (strcmp(command, (#name)) == 0) \
-                                *command_address = COMMAND_##name; \
-                            else
 enum errors {
     NO_ERROR = 0,
     INCORRECT_COMMAND = 2,
@@ -50,8 +47,11 @@ convertationStatuses convertAsmToCommands(command_t* commands, char* buffer, con
     assert(commands != nullptr && "commmands is null pointer");
     assert(buffer != nullptr && "buffer is null pointer");
     assert(asmFileName != nullptr && "assembler file name is null pointer");
+    assert(numPass == 1 || numPass == 2);
 
-    if (numPass == 1) addZeroTerminator_splitLineIntoWords(buffer, numberOfStrings);
+    if (numPass == 1)
+        addZeroTerminator_splitLineIntoWords(buffer, numberOfStrings);
+        
     size_t addedCommands = 0;
     errors error = NO_ERROR;
     char* command = nullptr;
@@ -62,7 +62,10 @@ convertationStatuses convertAsmToCommands(command_t* commands, char* buffer, con
     for (size_t line = 0; line < numberOfStrings;){
         command = buffer + buff_i;
         
-        if (strlen(command) == 0) { buff_i += 1; continue; }
+        if (strlen(command) == 0) { 
+            buff_i += 1;
+            continue;
+        }
 
         // check could it be a label
         if ((command[strlen(command) - 1] == ':') && (strlen(command) > 1)){
@@ -91,7 +94,7 @@ convertationStatuses convertAsmToCommands(command_t* commands, char* buffer, con
 
                     error = MACRO_WR_ARG(POP)
 
-                case COMMAND_JA: // TODO jne, jb, jbe
+                case COMMAND_JA:
                 case COMMAND_JAE:
                 case COMMAND_JE:
                 case COMMAND_JBE:
@@ -175,6 +178,10 @@ static int findValueOfLabel(labelsData_t* lData, char* nameOfLabel){
     return -1;
 }
 
+#define DEF_CMD_(name, ...) if (strcmp(command, (#name)) == 0) \
+                                *command_address = COMMAND_##name; \
+                            else
+
 static errors writeCommandWithoutArg(const char* command, command_t* commands, size_t indexOfCommand){
 
     progCommands* command_address = &(commands[indexOfCommand].com);
@@ -186,6 +193,7 @@ static errors writeCommandWithoutArg(const char* command, command_t* commands, s
 
     return NO_ERROR;
 }
+#undef DEF_CMD_
 
 static errors writeArgument(char* arg, command_t* commands, size_t indexOfCommand,
                             progCommands cmdBeforeArg, labelsData_t* lData, size_t* addedCommands){

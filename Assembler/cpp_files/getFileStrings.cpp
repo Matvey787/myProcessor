@@ -14,7 +14,11 @@ size_t getFileStrings(char** buffer, const char* file_name){
     // open file for read
 
     FILE* rFile = fopen(file_name, "rb");
-    assert(rFile && "couldn't open read file in getFileStrs");
+
+    if (rFile == nullptr) {
+        printf("couldn't open read file");
+        return 0;
+    }
 
     // find size of file
 
@@ -26,7 +30,11 @@ size_t getFileStrings(char** buffer, const char* file_name){
     // read text from file
 
     *buffer = (char*)calloc((size_t)(size + 1), sizeof(char));
-    assert(buffer && "couldn't allocate memory in getFileStrs");
+    if (*buffer == nullptr){
+        printf("couldn't allocate memory for buffer");
+        return 0;
+    }
+
     fread(*buffer, sizeof(char), (size_t)size, rFile);
 
     // find number of strings

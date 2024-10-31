@@ -46,6 +46,11 @@ void initSpu(spu_t* spu){
     MACRO_stackInit(&spu->stack);
     spu->code = nullptr;
     spu->RAM = (StackElem_t*)calloc(c_sizeOfRam, sizeof(StackElem_t));
+    if (spu->RAM == nullptr) {
+        printf("couldn't realloc memory for RAM");
+        return;
+    }
+
     assert((spu->RAM != nullptr) && "calloc memory fail");
 }
 

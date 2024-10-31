@@ -24,23 +24,19 @@ void putDataToFileCode(command_t* commands, size_t length, const char* file_name
         //printf("%d %d %lg\n", commands[i].com, commands[i].reg, commands[i].num);
 
         if (commands[i].com >= 0){
-            fprintf(wFile, "%d", commands[i].com);
-            fputs("\n", wFile);
+            fprintf(wFile, "%d\n", commands[i].com);
         }
         
         if (commands[i].mode > 0) {
-            fprintf(wFile, "%d", commands[i].mode);
-            fputs("\n", wFile);
+            fprintf(wFile, "%d\n", commands[i].mode);
         }
 
         if (!isnan(commands[i].num)) {
-            fprintf(wFile, "%lg", commands[i].num);
-            fputs("\n", wFile);
+            fprintf(wFile, "%lg\n", commands[i].num);
         }
 
         if (commands[i].reg >= 0){
-            fprintf(wFile, "%d", commands[i].reg);
-            fputs("\n", wFile);
+            fprintf(wFile, "%d\n", commands[i].reg);
         }
         
     }

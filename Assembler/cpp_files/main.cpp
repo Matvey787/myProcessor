@@ -19,9 +19,6 @@ const char c_default_asm_FileName[] = "../PROGRAM.ASM";
 const short c_numOfLbls = 10;
 
 int main(int argc, char* argv[]){
-    char* buffer = nullptr;
-    size_t numberOfStrings = 0;
-
     //files
     const char* fileName = nullptr;
     if (argc > 1){
@@ -31,8 +28,9 @@ int main(int argc, char* argv[]){
         fileName = c_default_asm_FileName;
     }
 
-    numberOfStrings = getFileStrings(&buffer, fileName); 
-    char programCode_FileName[] = "../program_code.txt";
+    char* buffer = nullptr;
+    size_t numberOfStrings = getFileStrings(&buffer, fileName); 
+    char programCode_FileName[] = "../program_code.txt"; // TODO
     char programBinaryCode_FileName[] = "../program_BinaryCode.txt";
 
     // read commmands from assembler
@@ -69,6 +67,11 @@ void myCallocOfCommands(command_t** commands, size_t numberOfStrings){
     assert(commands != nullptr && "commands is nullptr in myCallocOfCommands");
 
     *commands = (command_t*)calloc(sizeof(command_t), numberOfStrings);
+    
+    if (*commands == nullptr){
+        printf("can't realloc memory for commands");
+        return;
+    }
 
     for (size_t i = 0; i < numberOfStrings; i++){
         (*commands)[i].com  = NOT_COMMAND;
@@ -82,6 +85,11 @@ void myCallocOfLabels(labelsData_t* lData, size_t size){
     assert(lData != nullptr && "lData is nullptr in myCallocOfCommands");
 
     lData->labels = (label_t*)calloc(size, sizeof(label_t));
+    
+    if (lData->labels == nullptr){
+        printf("can't realloc memory for labels");
+        return;
+    }
     lData->size = size;
 
     for (size_t i = 0; i < size; i++){

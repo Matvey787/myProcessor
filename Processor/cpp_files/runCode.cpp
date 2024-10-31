@@ -41,7 +41,7 @@ void runCode(spu_t* spu MYSBS(, size_t numberOfCommands)){
 
     while (1){
         progCommands cmd = spu->code[spu->ip].int_num >= 0 ? (progCommands)spu->code[spu->ip].int_num : 
-                                                            (progCommands)spu->code[spu->ip].dbl_num;
+                                                             (progCommands)spu->code[spu->ip].dbl_num;
         
         MYSBS(stepByStep(spu);)
         spu->ip++;

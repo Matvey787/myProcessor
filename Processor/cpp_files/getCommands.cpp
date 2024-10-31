@@ -13,6 +13,11 @@ getComStatuses getCommands(spu_t* spu, char* buffer){
     assert(buffer != nullptr);
     spu->code = (number_t*)calloc(sizeof(number_t), c_numOfCommmands);
 
+    if (spu->code == nullptr) {
+        printf("couldn't open read file");
+        return SOMETHING_GO_WRONG_WITH_GETTING_COMMANDS;
+    }
+
     for (size_t i = 0; i < c_numOfCommmands; i++){
         spu->code[i].dbl_num = NAN;
         spu->code[i].int_num = -1;
@@ -90,19 +95,19 @@ static getComStatuses getArgs_PUSH(spu_t* spu, size_t*codeLength, char* buffer, 
 
     switch (mode)
     {
-    case (REGISTER_MOD + NUMBER_MOD + RAM_MOD):
+    case (REGISTER_MOD | NUMBER_MOD | RAM_MOD):
         memcpy(&(spu->code)[(*codeLength)++].dbl_num, buffer + *buff_i, sizeof(double));
         *buff_i += sizeof(double);
         memcpy(&(spu->code)[(*codeLength)++].int_num, buffer + *buff_i, sizeof(int));
         *buff_i += sizeof(int);
         break;
     
-    case (REGISTER_MOD + RAM_MOD):
+    case (REGISTER_MOD | RAM_MOD):
         memcpy(&(spu->code)[(*codeLength)++].int_num, buffer + *buff_i, sizeof(int));
         *buff_i += sizeof(int);
         break;
 
-    case (NUMBER_MOD + RAM_MOD):
+    case (NUMBER_MOD | RAM_MOD):
     case NUMBER_MOD:
         memcpy(&(spu->code)[(*codeLength)++].dbl_num, buffer + *buff_i, sizeof(double));
         *buff_i += sizeof(double);

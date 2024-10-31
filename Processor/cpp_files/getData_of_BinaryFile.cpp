@@ -28,6 +28,10 @@ size_t getData_of_BinaryFile(char** buffer, const char* file_name){
     // read text from file
 
     *buffer = (char*)calloc(size, sizeof(char));
+    if (*buffer == nullptr) {
+        printf("couldn't realloc memory fo buffer");
+        return 0;
+    }
     assert((*buffer != nullptr) && "calloc memory fail");
     fread(*buffer, sizeof(char), size, rFile);
 
