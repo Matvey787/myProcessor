@@ -14,7 +14,7 @@
 
 void myCallocOfCommands(command_t** commands, size_t numberOfStrings);
 void myCallocOfLabels(labelsData_t* lData, size_t size);
-const char c_default_asm_FileName[] = "../PROGRAM.ASM";
+const char c_default_asm_FileName[] = "../../program.ASM";
 
 const short c_numOfLbls = 10;
 
