@@ -232,6 +232,14 @@ void printwCurrentCommand(spu_t* spu, int yCoord_stack){
     case COMMAND_HLT:
         printw("(hlt)");
         break;
+    
+    case COMMAND_CALL:
+        printw("(call)-----^");
+        break;
+
+    case COMMAND_RET:
+        printw("(ret)-----^");
+        break;
 
     case NOT_COMMAND:
     default:
@@ -315,6 +323,9 @@ void printRegisterName(progRegisters indexOfRegister){
         break;
     case DX:
         printw("DX");
+        break;
+    case FS:
+        printw("FS");
         break;
 
     case NOT_REGISTER:

@@ -11,6 +11,6 @@ enum getComStatuses{
     SOMETHING_GO_WRONG_WITH_GETTING_COMMANDS = 0
 };
 
-getComStatuses getCommands(spu_t* spu, char* buffer);
+getComStatuses getCommands(spu_t* spu, char* buffer, const size_t sizeOfBuffer);
 
 #endif

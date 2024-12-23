@@ -27,9 +27,7 @@ double* getAddress(spu_t* spu);
 
 #define MACRO_CASE_JUMP(...) firstNum = stackPop(&(spu->stack)); \
                             secondNum = stackPop(&(spu->stack)); \
-                            __VA_ARGS__ \
-                            stackPush(&(spu->stack), secondNum); \
-                            stackPush(&(spu->stack), firstNum);
+                            __VA_ARGS__
 
 const double c_compareZero = 0.001;
 
@@ -42,7 +40,7 @@ void runCode(spu_t* spu MYSBS(, size_t numberOfCommands)){
     while (1){
         progCommands cmd = spu->code[spu->ip].int_num >= 0 ? (progCommands)spu->code[spu->ip].int_num : 
                                                             (progCommands)spu->code[spu->ip].dbl_num;
-        
+        //printf("------------- %d\n", cmd);
         MYSBS(stepByStep(spu);)
         spu->ip++;
 
@@ -112,7 +110,7 @@ short executeCurrentCommand(const progCommands cmd, spu_t* spu){
             stackPush(&(spu->stack), secondNum/firstNum);
         else{
             stackPush(&(spu->stack), DBL_MAX);
-            //printf("division by zero");
+            printf("division by zero");
         }
         break;
 
@@ -216,7 +214,22 @@ short executeCurrentCommand(const progCommands cmd, spu_t* spu){
         spu->ip = (size_t)(spu->code)[spu->ip].dbl_num;
 
         break;
+    
+    // ----------------------------------------------------------------------------  CALL  ------------------------------------------------------------------
+    case COMMAND_CALL:
 
+        stackPush(&(spu->stack), (StackElem_t)(spu->ip + 1));
+        spu->ip = (size_t)(spu->code)[spu->ip].dbl_num;
+
+        break;
+    // ----------------------------------------------------------------------------  RET  ------------------------------------------------------------------
+    case COMMAND_RET:
+    {
+        size_t ipToGoTo = (size_t)stackPop(&(spu->stack));
+        spu->ip = ipToGoTo;
+
+        break;
+    }
     // ----------------------------------------------------------------------------  HLT  ------------------------------------------------------------------
     case COMMAND_HLT:
 
@@ -263,13 +276,17 @@ double* getAddress(spu_t* spu){
     int modType = spu->code[spu->ip++].int_num;
 
     int ptr_arr = 0;
-
-    if ((modType & 1) && (modType & 4)){
+    if ((modType & 1) && (modType & 2) && (modType & 4)) {
+        ptr_arr = (int)( spu->code[(spu->ip)++].dbl_num ) + (int)( (spu->regData)[spu->code[(spu->ip)++].int_num] ) ;
+        //("ptr addres: %d\n", ptr_arr);
+        return &((spu->RAM)[ptr_arr]);
+    }
+    else if ((modType & 1) && (modType & 4)){
         ptr_arr = (int)( spu->code[(spu->ip)++].dbl_num );
         return &((spu->RAM)[ptr_arr]);
 
     } else if ((modType & 2) && (modType & 4)){
-        ptr_arr = (int)( spu->code[(spu->ip)++].int_num );
+        ptr_arr = (int)( (spu->regData)[spu->code[(spu->ip)++].int_num] );
         return &((spu->RAM)[ptr_arr]);
 
     } else if ((modType & 2)){

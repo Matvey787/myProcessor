@@ -13,10 +13,10 @@ void getCoeff(const char* message, double* num){
 		--maxAttempts;
 		}
     if (maxAttempts == 0)
-        {
+    {
         printf("Sorry, you have already used all attempts!");
         exit(1);
-        }
+    }
 	clearInput();
 }
 

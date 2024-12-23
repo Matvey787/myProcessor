@@ -24,6 +24,9 @@ enum progCommands {
     COMMAND_JBE = 16,
     COMMAND_JB = 17,
 
+    COMMAND_CALL = 18,
+    COMMAND_RET = 19,
+    
     COMMAND_HLT = 0,
     NOT_COMMAND = -1
 };

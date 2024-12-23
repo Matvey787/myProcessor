@@ -13,7 +13,7 @@
 void initSpu(spu_t* spu);
 void destroySpu(spu_t* spu);
 
-const size_t c_sizeOfRam = 100;
+const size_t c_sizeOfRam = 128;
 
 int main(){
 
@@ -22,13 +22,13 @@ int main(){
 
     // read commmands from assembler
     char* buffer = nullptr;
-    getData_of_BinaryFile(&buffer, programCode_FileName);
+    size_t sizeOfBuffer = getData_of_BinaryFile(&buffer, programCode_FileName);
     
     // create soft processing unit
     spu_t spu = {};
     initSpu(&spu);
 
-    getCommands(&spu, buffer);
+    getCommands(&spu, buffer, sizeOfBuffer);
 
     //for(size_t i = 0; i< spu.codeLength; i++) printf("%lg %d\n", (spu.code[i].dbl_num), (spu.code[i].int_num));
     

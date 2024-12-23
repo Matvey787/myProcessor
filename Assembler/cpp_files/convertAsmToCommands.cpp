@@ -67,7 +67,10 @@ convertationStatuses convertAsmToCommands(command_t* commands, char* buffer, con
         // check could it be a label
         if ((command[strlen(command) - 1] == ':') && (strlen(command) > 1)){
             if (numPass == 1)
+            {
                 error = wrLabelAddr(lData, command, addedCommands);
+            }
+                
 
             buff_i += strlen(command)+1;
             ++line;
@@ -91,6 +94,8 @@ convertationStatuses convertAsmToCommands(command_t* commands, char* buffer, con
 
                     error = MACRO_WR_ARG(POP)
 
+                case COMMAND_CALL:
+                    error = MACRO_WR_ARG(CALL)
                     /* error = writeArgument(arg, commands, line, COMMAND_POP, lData, &addedCommands);
                     buff_i += strlen(arg)+1;
                     break; */
@@ -116,6 +121,7 @@ convertationStatuses convertAsmToCommands(command_t* commands, char* buffer, con
                 case COMMAND_HLT:
                 case NOT_COMMAND:
                 case COMMAND_SQRT:
+                case COMMAND_RET:
                 default:
                     break;
             }
@@ -134,18 +140,17 @@ static errors wrLabelAddr(labelsData_t* lData, char* nameOfLabel, size_t addedCo
     assert(lData != nullptr && "label data is null pointer");
     assert(nameOfLabel != nullptr && "name of label is null pointer");
 
+    addLabel(lData, nameOfLabel);
+
     for (size_t label_index = 0; label_index < lData->size; label_index++){
 
         if ((lData->labels)[label_index].name != nullptr)
-        if (strcmp((lData->labels)[label_index].name, nameOfLabel) == 0){
+            if (strcmp((lData->labels)[label_index].name, nameOfLabel) == 0){
 
-            if ((lData->labels)[label_index].value != -1) return REDEFENITION_OF_LABEL;
-
-            (lData->labels)[label_index].value = (int)addedCommands;
-        }
+                if ((lData->labels)[label_index].value != -1) return REDEFENITION_OF_LABEL;
+                (lData->labels)[label_index].value = (int)addedCommands;
+            }
     }
-
-    addLabel(lData, nameOfLabel);
 
     return NO_ERROR;
 }
@@ -171,8 +176,8 @@ static int findValueOfLabel(labelsData_t* lData, char* nameOfLabel){
     
     for (size_t label_index = 0; label_index < lData->size; label_index++)
         if ((lData->labels)[label_index].name != nullptr)
-        if (strcmp((lData->labels)[label_index].name, nameOfLabel) == 0)
-            return (lData->labels)[label_index].value;
+            if (strcmp((lData->labels)[label_index].name, nameOfLabel) == 0)
+                return (lData->labels)[label_index].value;
 
     errors error = addLabel(lData, nameOfLabel);
     assert(error != NO_MEMORY_FOR_NEW_LABEL); // FIXME remove and check return value
@@ -234,6 +239,12 @@ static errors writeCommandWithoutArg(const char* command, command_t* commands, s
     else if (strcmp(command, "JNE") == 0)
         *command_address = COMMAND_JNE;
 
+    else if (strcmp(command, "CALL") == 0)
+        *command_address = COMMAND_CALL;
+
+    else if (strcmp(command, "RET") == 0)
+        *command_address = COMMAND_RET;
+
     else if (strcmp(command, "HLT") == 0)
         *command_address = COMMAND_HLT;
     else
@@ -253,6 +264,13 @@ static errors writeArgument(char* arg, command_t* commands, size_t indexOfComman
             writeToStruct(commands, indexOfCommand, REGISTER_MOD | NUMBER_MOD | RAM_MOD, number, reg);
             *addedCommands += 3;
 
+        } else if (sscanf(arg, "[%2s+%lg]", reg, &number) == 2){
+            writeToStruct(commands, indexOfCommand, REGISTER_MOD | NUMBER_MOD | RAM_MOD, number, reg);
+            *addedCommands += 3;
+        
+        /* } else if (sscanf(arg, "%2s+%lg", reg, &number) == 2){
+            writeToStruct(commands, indexOfCommand, REGISTER_MOD | NUMBER_MOD, number, reg);
+            *addedCommands += 3; */
 
         } else if (sscanf(arg, "[%lg]", &number) == 1){
             writeToStruct(commands, indexOfCommand, NUMBER_MOD | RAM_MOD, number, reg);
@@ -279,26 +297,47 @@ static errors writeArgument(char* arg, command_t* commands, size_t indexOfComman
     //---------------------------------------------------command pop----------------------------------------------------------
 
     else if (cmdBeforeArg == COMMAND_POP){
-        if (sscanf(arg, "[%lg]", &number) == 1){
-            writeToStruct(commands, indexOfCommand, NUMBER_MOD | RAM_MOD, number, reg);      
-            
-        } else if (sscanf(arg, "[%2s]", reg) == 1){
-            writeToStruct(commands, indexOfCommand, REGISTER_MOD | RAM_MOD, number, reg);           
         
-        }else if (sscanf(arg, "%2s", reg) == 1){
+        if (sscanf(arg, "[%lg+%2s]", &number, reg) == 2){
+            writeToStruct(commands, indexOfCommand, REGISTER_MOD | NUMBER_MOD | RAM_MOD, number, reg);
+            *addedCommands += 3;
+
+        } else if (sscanf(arg, "[%2s+%lg]", reg, &number) == 2){
+            writeToStruct(commands, indexOfCommand, REGISTER_MOD | NUMBER_MOD | RAM_MOD, number, reg);
+            *addedCommands += 3;
+
+        } else if (sscanf(arg, "[%lg]", &number) == 1){
+            writeToStruct(commands, indexOfCommand, NUMBER_MOD | RAM_MOD, number, reg);
+            *addedCommands += 2;
+
+        } else if (sscanf(arg, "[%s]", reg) == 1){
+            writeToStruct(commands, indexOfCommand, REGISTER_MOD | RAM_MOD, number, reg);
+            *addedCommands += 2;
+
+        } else if (sscanf(arg, "%lg", &number) == 1){
+            writeToStruct(commands, indexOfCommand, NUMBER_MOD, number, reg);
+            *addedCommands += 2;
+
+        } else if (sscanf(arg, "%s", reg) == 1){
             writeToStruct(commands, indexOfCommand, REGISTER_MOD, number, reg);
-        
+            *addedCommands += 2;
+
         } else {
-            return NO_CORRECT_REGISTER_AFTER_COMMAND;
+            //printf("%s %d\n", arg, commands[indexOfCommand].com);
+            return NO_CORRECT_NUMBER_OR_REGISTER_AFTER_COMMAND;
         }
-        
-        *addedCommands += 2;
 
     //---------------------------------------------------commands family of jumps----------------------------------------------------------
 
     } else if (cmdBeforeArg == COMMAND_JMP || cmdBeforeArg == COMMAND_JE || cmdBeforeArg == COMMAND_JAE || cmdBeforeArg == COMMAND_JA ||
                cmdBeforeArg == COMMAND_JB || cmdBeforeArg == COMMAND_JBE || cmdBeforeArg == COMMAND_JNE){
 
+        commands[indexOfCommand].num = findValueOfLabel(lData, arg);
+        *addedCommands += 1;
+    }
+    //---------------------------------------------------call function command----------------------------------------------------------
+    else if (cmdBeforeArg == COMMAND_CALL)
+    {
         commands[indexOfCommand].num = findValueOfLabel(lData, arg);
         *addedCommands += 1;
     }
@@ -326,6 +365,9 @@ static progRegisters getRegisterAddress(const char* regName){
     }
     else if (strcmp(regName, "DX") == 0){
         return DX;
+    }
+    else if (strcmp(regName, "FS") == 0){
+        return FS;
     }
     else
         return NOT_REGISTER;
