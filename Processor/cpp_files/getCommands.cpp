@@ -27,7 +27,7 @@ getComStatuses getCommands(spu_t* spu, char* buffer, const size_t sizeOfBuffer){
         if (buffer + buff_i == endOfBuffer)
             break;
         memcpy(&((spu->code)[codeLength++].int_num), buffer + buff_i, sizeof(int));
-        printf("ffffff %d\n", (spu->code)[codeLength-1].int_num);
+        //printf("ffffff %d\n", (spu->code)[codeLength-1].int_num);
         buff_i += sizeof(int);
         indexOfCurrentCommand = (spu->code)[codeLength - 1].int_num;
         

@@ -71,7 +71,6 @@ short executeCurrentCommand(const progCommands cmd, spu_t* spu){
     case COMMAND_POP:
 
         poppedNum = stackPop(&(spu->stack));
-
         *(getAddress(spu)) = poppedNum;
 
         break;
@@ -260,9 +259,10 @@ double getArg(spu_t* spu){
 
     if (modType & 1) result = spu->code[(spu->ip)++].dbl_num;
 
-    if (modType & 2) {result += (spu->regData)[spu->code[(spu->ip)++].int_num];}
+    if (modType & 2) { result += (spu->regData)[spu->code[(spu->ip)++].int_num]; }
 
-    if (modType & 4) {
+    if (modType & 4)
+    {
         int addr = (int)result;
         result = (spu->RAM)[addr];
     }
@@ -272,13 +272,16 @@ double getArg(spu_t* spu){
 
 
 double* getAddress(spu_t* spu){
-
+   
     int modType = spu->code[spu->ip++].int_num;
-
+    //printf("get addres called %d\n", modType);
     int ptr_arr = 0;
     if ((modType & 1) && (modType & 2) && (modType & 4)) {
-        ptr_arr = (int)( spu->code[(spu->ip)++].dbl_num ) + (int)( (spu->regData)[spu->code[(spu->ip)++].int_num] ) ;
-        //("ptr addres: %d\n", ptr_arr);
+        ptr_arr = (int)( spu->code[spu->ip].dbl_num );
+        spu->ip++;
+        ptr_arr += (int)( (spu->regData)[spu->code[(spu->ip)].int_num] ) ;
+        spu->ip++;
+        //printf("ptr addres in ram: %d\n", ptr_arr);
         return &((spu->RAM)[ptr_arr]);
     }
     else if ((modType & 1) && (modType & 4)){

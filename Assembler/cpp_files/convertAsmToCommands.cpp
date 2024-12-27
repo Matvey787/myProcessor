@@ -297,25 +297,22 @@ static errors writeArgument(char* arg, command_t* commands, size_t indexOfComman
     //---------------------------------------------------command pop----------------------------------------------------------
 
     else if (cmdBeforeArg == COMMAND_POP){
-        
+        //printf("++++\n");
         if (sscanf(arg, "[%lg+%2s]", &number, reg) == 2){
             writeToStruct(commands, indexOfCommand, REGISTER_MOD | NUMBER_MOD | RAM_MOD, number, reg);
             *addedCommands += 3;
 
         } else if (sscanf(arg, "[%2s+%lg]", reg, &number) == 2){
             writeToStruct(commands, indexOfCommand, REGISTER_MOD | NUMBER_MOD | RAM_MOD, number, reg);
+            printf("I see pop with all mode %c%c %d\n", reg[0], reg[1], *addedCommands);
             *addedCommands += 3;
 
         } else if (sscanf(arg, "[%lg]", &number) == 1){
             writeToStruct(commands, indexOfCommand, NUMBER_MOD | RAM_MOD, number, reg);
             *addedCommands += 2;
 
-        } else if (sscanf(arg, "[%s]", reg) == 1){
+        } else if (sscanf(arg, "[%2s]", reg) == 1){
             writeToStruct(commands, indexOfCommand, REGISTER_MOD | RAM_MOD, number, reg);
-            *addedCommands += 2;
-
-        } else if (sscanf(arg, "%lg", &number) == 1){
-            writeToStruct(commands, indexOfCommand, NUMBER_MOD, number, reg);
             *addedCommands += 2;
 
         } else if (sscanf(arg, "%s", reg) == 1){
@@ -326,6 +323,7 @@ static errors writeArgument(char* arg, command_t* commands, size_t indexOfComman
             //printf("%s %d\n", arg, commands[indexOfCommand].com);
             return NO_CORRECT_NUMBER_OR_REGISTER_AFTER_COMMAND;
         }
+        //printf("++++\n");
 
     //---------------------------------------------------commands family of jumps----------------------------------------------------------
 
@@ -353,7 +351,7 @@ static void writeToStruct(command_t* commands, size_t indexOfCommand, int mode, 
 
 static progRegisters getRegisterAddress(const char* regName){
 
-
+    printf("get register %s\n", regName);
     if (strcmp(regName, "AX") == 0){
         return AX;
     }
