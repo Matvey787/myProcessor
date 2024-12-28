@@ -11,21 +11,26 @@ enum progCommands {
     COMMAND_SUB = 4,
     COMMAND_MUL = 5,
     COMMAND_DIV = 6,
-
-    COMMAND_OUT = 7,
-    COMMAND_IN = 8,
-    COMMAND_SQRT = 9,
+    COMMAND_SIN = 7,
+    COMMAND_COS = 8,
+    COMMAND_LOG = 9,
+    COMMAND_POW = 10,
     
-    COMMAND_JA = 11,
-    COMMAND_JAE = 12,
-    COMMAND_JE = 13,
-    COMMAND_JMP = 14,
-    COMMAND_JNE = 15,
-    COMMAND_JBE = 16,
-    COMMAND_JB = 17,
+    COMMAND_SQRT = 11,
 
-    COMMAND_CALL = 18,
-    COMMAND_RET = 19,
+    COMMAND_OUT = 12,
+    COMMAND_IN = 13,
+
+    COMMAND_JA = 14,
+    COMMAND_JAE = 15,
+    COMMAND_JE = 16,
+    COMMAND_JMP = 17,
+    COMMAND_JNE = 18,
+    COMMAND_JBE = 19,
+    COMMAND_JB = 20,
+
+    COMMAND_CALL = 21,
+    COMMAND_RET = 22,
     
     COMMAND_HLT = 0,
     NOT_COMMAND = -1

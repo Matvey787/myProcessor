@@ -188,6 +188,22 @@ void printwCurrentCommand(spu_t* spu, int yCoord_stack){
         printw("(div)");
         break;
 
+    case COMMAND_SIN:
+        printw("(sin)");
+        break;
+    
+    case COMMAND_COS:
+        printw("(cos)");
+        break;
+
+    case COMMAND_LOG:
+        printw("(log)");
+        break;
+
+    case COMMAND_POW:
+        printw("(pow)");
+        break;
+
     case COMMAND_OUT:
         printw("(out)");
         printwOut(spu, yCoord_stack + 2);

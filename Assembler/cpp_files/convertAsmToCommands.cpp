@@ -113,6 +113,10 @@ convertationStatuses convertAsmToCommands(command_t* commands, char* buffer, con
                     buff_i += strlen(arg)+1;
                     break; */
                 case COMMAND_ADD:
+                case COMMAND_SIN:
+                case COMMAND_COS:
+                case COMMAND_LOG:
+                case COMMAND_POW:
                 case COMMAND_SUB:
                 case COMMAND_DIV:
                 case COMMAND_MUL:
@@ -211,6 +215,18 @@ static errors writeCommandWithoutArg(const char* command, command_t* commands, s
     
     else if (strcmp(command, "SQRT") == 0)
         *command_address = COMMAND_SQRT;
+    
+    else if (strcmp(command, "SIN") == 0)
+        *command_address = COMMAND_SIN;
+
+    else if (strcmp(command, "COS") == 0)
+        *command_address = COMMAND_COS;
+    
+    else if (strcmp(command, "LOG") == 0)
+        *command_address = COMMAND_LOG;
+
+    else if (strcmp(command, "POW") == 0)
+        *command_address = COMMAND_POW;
 
     else if (strcmp(command, "OUT") == 0)
         *command_address = COMMAND_OUT;
@@ -304,7 +320,7 @@ static errors writeArgument(char* arg, command_t* commands, size_t indexOfComman
 
         } else if (sscanf(arg, "[%2s+%lg]", reg, &number) == 2){
             writeToStruct(commands, indexOfCommand, REGISTER_MOD | NUMBER_MOD | RAM_MOD, number, reg);
-            printf("I see pop with all mode %c%c %d\n", reg[0], reg[1], *addedCommands);
+            //printf("I see pop with all mode %c%c %d\n", reg[0], reg[1], *addedCommands);
             *addedCommands += 3;
 
         } else if (sscanf(arg, "[%lg]", &number) == 1){

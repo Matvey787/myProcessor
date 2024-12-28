@@ -124,6 +124,62 @@ short executeCurrentCommand(const progCommands cmd, spu_t* spu){
             return STOP_RUN;
         }
         break;
+    
+    // ----------------------------------------------------------------------------  SIN  ------------------------------------------------------------------
+    case COMMAND_SIN:
+        firstNum = stackPop(&(spu->stack));
+        if (firstNum >= 0){
+            stackPush(&(spu->stack), sin(firstNum));
+            
+        } else {
+            printf("root of a negative number");
+            return STOP_RUN;
+        }
+        break;
+    
+    // ----------------------------------------------------------------------------  COS  ------------------------------------------------------------------
+    case COMMAND_COS:
+        firstNum = stackPop(&(spu->stack));
+        if (firstNum >= 0){
+            stackPush(&(spu->stack), cos(firstNum));
+            
+        } else {
+            printf("root of a negative number");
+            return STOP_RUN;
+        }
+        break;
+    
+    // ----------------------------------------------------------------------------  LOG  ------------------------------------------------------------------
+    case COMMAND_LOG:
+    {
+        firstNum = stackPop(&(spu->stack)); // base
+        secondNum = stackPop(&(spu->stack)); // argument of log
+        double ans = log(secondNum) / log(firstNum);
+        if (firstNum >= 0){
+            stackPush(&(spu->stack), ans);
+            
+        } else {
+            printf("root of a negative number");
+            return STOP_RUN;
+        }
+        break;
+    }
+        
+    // ----------------------------------------------------------------------------  POW  ------------------------------------------------------------------
+    case COMMAND_POW:
+    {
+        firstNum = stackPop(&(spu->stack)); // power
+        secondNum = stackPop(&(spu->stack)); // argument of pow
+        double ans = pow(secondNum, firstNum);
+        if (firstNum >= 0){
+            stackPush(&(spu->stack), ans);
+            
+        } else {
+            printf("root of a negative number");
+            return STOP_RUN;
+        }
+        break;
+    }
 
     // ----------------------------------------------------------------------------  OUT  ------------------------------------------------------------------
     case COMMAND_OUT:
@@ -229,6 +285,7 @@ short executeCurrentCommand(const progCommands cmd, spu_t* spu){
 
         break;
     }
+
     // ----------------------------------------------------------------------------  HLT  ------------------------------------------------------------------
     case COMMAND_HLT:
 
