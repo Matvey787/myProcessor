@@ -48,9 +48,6 @@ convertationStatuses convertAsmToCommands(command_t* commands, char* buffer, con
     assert(asmFileName != nullptr && "assembler file name is null pointer");
 
     if (numPass == 1) addZeroTerminator_splitLineIntoWords(buffer, numberOfStrings);
-    /* for (int i = 0; i < 10; i++){
-        printf("%s\n", buffer + i);
-    } */
 
     size_t addedCommands = 0;
     errors error = NO_ERROR;
@@ -62,7 +59,16 @@ convertationStatuses convertAsmToCommands(command_t* commands, char* buffer, con
     for (size_t line = 0; line < numberOfStrings;){
         command = buffer + buff_i;
         
-        if (strlen(command) == 0) { buff_i += 1; continue; }
+        if (strlen(command) == 0) { buff_i += 1; ++line; continue; }
+
+        // if current command is comment
+        if (command[0] == ';')
+        {
+            buff_i += strlen(command) + 1; // add ";\0" (2 symbols)
+            buff_i += strlen(buffer + buff_i) + 1; // add "yourcomment\0" (comment symbols + 1 simbol by \0)
+            ++line;
+            continue;
+        }
 
         // check could it be a label
         if ((command[strlen(command) - 1] == ':') && (strlen(command) > 1)){
@@ -276,11 +282,11 @@ static errors writeArgument(char* arg, command_t* commands, size_t indexOfComman
     
     //---------------------------------------------------command push----------------------------------------------------------
     if (cmdBeforeArg == COMMAND_PUSH){
-        if (sscanf(arg, "[%lg+%2s]", &number, reg) == 2){
+        if (sscanf(arg, "[%lg + %2s]", &number, reg) == 2){
             writeToStruct(commands, indexOfCommand, REGISTER_MOD | NUMBER_MOD | RAM_MOD, number, reg);
             *addedCommands += 3;
 
-        } else if (sscanf(arg, "[%2s+%lg]", reg, &number) == 2){
+        } else if (sscanf(arg, "[%2s + %lg]", reg, &number) == 2){
             writeToStruct(commands, indexOfCommand, REGISTER_MOD | NUMBER_MOD | RAM_MOD, number, reg);
             *addedCommands += 3;
         
@@ -314,11 +320,11 @@ static errors writeArgument(char* arg, command_t* commands, size_t indexOfComman
 
     else if (cmdBeforeArg == COMMAND_POP){
         //printf("++++\n");
-        if (sscanf(arg, "[%lg+%2s]", &number, reg) == 2){
+        if (sscanf(arg, "[%lg + %2s]", &number, reg) == 2){
             writeToStruct(commands, indexOfCommand, REGISTER_MOD | NUMBER_MOD | RAM_MOD, number, reg);
             *addedCommands += 3;
 
-        } else if (sscanf(arg, "[%2s+%lg]", reg, &number) == 2){
+        } else if (sscanf(arg, "[%2s + %lg]", reg, &number) == 2){
             writeToStruct(commands, indexOfCommand, REGISTER_MOD | NUMBER_MOD | RAM_MOD, number, reg);
             //printf("I see pop with all mode %c%c %d\n", reg[0], reg[1], *addedCommands);
             *addedCommands += 3;
@@ -426,23 +432,22 @@ static void printTypeOfError(errors error, const char* asmFileName, const size_t
 static void addZeroTerminator_splitLineIntoWords(char* buffer, const size_t numberOfStrings){
 
     size_t buffer_i = 0;
-    //printf("%d\n", numberOfStrings);
+    bool needToChangeSpaceToZeroTerm = true;
 
     for (size_t strings_cnt = 0; strings_cnt < numberOfStrings;){
-        //printf("%c", buffer[buffer_i]);
         assert(buffer[buffer_i] != '\0');
 
-        if (buffer[buffer_i] == '\n'){
+        if (buffer[buffer_i] == '\n')
+        {
+            needToChangeSpaceToZeroTerm = true;
             buffer[buffer_i] = '\0';
             strings_cnt++;
         }
-        else if (isspace(buffer[buffer_i])){
-            //printf("space ");
+        else if (isspace(buffer[buffer_i]) && needToChangeSpaceToZeroTerm)
+        {
             buffer[buffer_i] = '\0';
+            needToChangeSpaceToZeroTerm = false;
         }
-
-        
         ++buffer_i;
     }
-
 }
